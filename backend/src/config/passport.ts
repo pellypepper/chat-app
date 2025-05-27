@@ -35,8 +35,8 @@ passport.use(new LocalStrategy({
 // Google OAuth strategy 
 passport.use(new GoogleStrategy(
   {
-    clientID: process.env.GOOGLE_CLIENT_ID || '',
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    clientID: process.env.GOOGLE_CLIENT_ID || 'deffd',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'fggdfgd',
     callbackURL: '/login/google/callback',
   },
   async (accessToken, refreshToken, profile, done) => {
