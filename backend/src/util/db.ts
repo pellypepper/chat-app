@@ -5,9 +5,9 @@ import "dotenv/config";
 
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres.bszouzrifbnexmuukeex:56RsirUPBtlNGKcZ@aws-0-eu-west-2.pooler.supabase.com:6543/postgres?pgbouncer=true",
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres.jfavrcsrtivybitbjxax:gmQ8qGm0VzhnmwRH@aws-0-eu-west-2.pooler.supabase.com:6543/postgres?pgbouncer=true",
   ssl: {
-    rejectUnauthorized: false, // Set to true in production with a valid certificate
+    rejectUnauthorized: false, 
   },
 });
 pool.connect()

@@ -1,7 +1,12 @@
 import express from 'express';
-import {Register} from '../controller/registerController';
+import { Register, VerifyEmail } from '../controller/registerController';
+
 const router = express.Router();
 
+// Register a new user 
+router.post('/', Register);
 
+// Verify email with code
+router.post('/verify', VerifyEmail);
 
-router.post('/', Register)
+export default router;
