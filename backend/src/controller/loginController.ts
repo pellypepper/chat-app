@@ -34,15 +34,30 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
     const accessToken = generateAccessToken({ id: user.id, email: user.email });
     const refreshToken = generateRefreshToken({ id: user.id, email: user.email });
 
-    // Remove sensitive info from user object
+   // Send cookies
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000 
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 
+    });
+
+    // Remove sensitive info from user
     const { password, ...userSafe } = user;
 
-    return res.status(200).json({
+ res.status(200).json({
       message: 'Login successful',
-      user: userSafe,
-      accessToken,
-      refreshToken,
+      user: userSafe
+     
     });
+
   })(req, res, next);
 };
 
@@ -62,21 +77,36 @@ export const googleLoginCallback = (req: Request, res: Response, next: NextFunct
     const accessToken = generateAccessToken({ id: user.id, email: user.email });
     const refreshToken = generateRefreshToken({ id: user.id, email: user.email });
 
+    // Send cookies
+     res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+
     // Remove sensitive info from user object
     const { password, ...userSafe } = user;
 
-    // Here you can redirect to frontend with tokens as query params or respond as JSON
-    return res.status(200).json({
+
+     res.status(200).json({
       message: 'Google login successful',
-      user: userSafe,
-      accessToken,
-      refreshToken,
+      user: userSafe
     });
   })(req, res, next);
 };
 
 // Logout 
-export const logout = (_req: Request, res: Response) => {
-  
-  res.status(200).json({ message: 'Logout successful' });
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
+  res.status(200).json({ message: 'Logged out successfully' });
 };

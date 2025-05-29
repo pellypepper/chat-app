@@ -6,6 +6,19 @@ import { db } from "../util/db";
 import bcrypt from 'bcrypt';
 import crypto from "crypto";
 
+// Extend Express Request interface 
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+
+    }
+    interface Request {
+      user?: User;
+    }
+  }
+}
+
 // Update user profile
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   const { firstname, lastname, email } = req.body;
@@ -120,7 +133,7 @@ export const forgetPassword = async (req: Request, res: Response): Promise<void>
       expires: expires,
     });
 
-    const resetLink = `http://localhost:4000/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    const resetLink = `http://localhost:4000/profile/reset-page?token=${resetToken}&email=${encodeURIComponent(email)}`;
     await sendEmail(
       email,
       "Password Reset",
@@ -133,6 +146,22 @@ export const forgetPassword = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+// Get Reset Password Page
+export const getResetPasswordPage = (req: Request, res: Response): void => {
+const { token, email } = req.query;
+
+  if (!token || !email) {
+   res.status(400).send('Invalid or missing token/email');
+    return ;
+  }
+
+  const frontendUrl = `http://localhost:4000/profile/reset-password?token=${token}&email=${encodeURIComponent(email as string)}`;
+  return res.redirect(frontendUrl);
+
+}
+
+
 
 // Reset Password 
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {
