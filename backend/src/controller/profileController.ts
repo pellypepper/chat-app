@@ -19,6 +19,31 @@ declare global {
   }
 }
 
+// Get user profile
+export const getProfile = async (req: Request, res: Response): Promise<void> => {
+  const userId = Number(req.user?.id);
+
+  if (!userId ) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  try {
+    const user = await db.select().from(users).where(eq(users.id, userId));
+    if (!user[0]) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Exclude sensitive fields like password
+    const { password, ...profile } = user[0];
+    res.status(200).json({ user: profile });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 // Update user profile
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   const { firstname, lastname, email } = req.body;
@@ -133,7 +158,7 @@ export const forgetPassword = async (req: Request, res: Response): Promise<void>
       expires: expires,
     });
 
-    const resetLink = `http://localhost:4000/profile/reset-page?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    const resetLink = `http://localhost:3000/profile/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
     await sendEmail(
       email,
       "Password Reset",
@@ -147,19 +172,7 @@ export const forgetPassword = async (req: Request, res: Response): Promise<void>
   }
 }
 
-// Get Reset Password Page
-export const getResetPasswordPage = (req: Request, res: Response): void => {
-const { token, email } = req.query;
 
-  if (!token || !email) {
-   res.status(400).send('Invalid or missing token/email');
-    return ;
-  }
-
-  const frontendUrl = `http://localhost:4000/profile/reset-password?token=${token}&email=${encodeURIComponent(email as string)}`;
-  return res.redirect(frontendUrl);
-
-}
 
 
 
