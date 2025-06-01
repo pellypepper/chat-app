@@ -7,7 +7,9 @@ import {
   timestamp,
   uuid,
   integer,
-  primaryKey
+
+  primaryKey,
+    pgEnum 
 } from "drizzle-orm/pg-core";
 
 // Users Table (Already defined)
@@ -84,3 +86,21 @@ export const messageDeletes = pgTable("message_deletes", {
 }, (table) => ({
   pk: primaryKey({ columns: [table.messageId, table.userId] }),
 }));
+
+const storyTypeEnum = pgEnum("story_type_enum", ["text", "image"]);
+
+export const stories = pgTable("stories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),  // store text or image URL
+  type: storyTypeEnum("type").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});
+
+export const storyViews = pgTable("story_views", {
+  id: serial("id").primaryKey(),
+  storyId: integer("story_id").notNull().references(() => stories.id),
+  viewerId: integer("viewer_id").notNull().references(() => users.id),
+  viewedAt: timestamp("viewed_at", { withTimezone: true }).defaultNow(),
+});
