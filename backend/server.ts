@@ -4,6 +4,7 @@ import './src/config/passport';
 import registerRoutes from './src/routes/register';
 import loginRoutes from './src/routes/login';
 import profileRoutes from './src/routes/profile';
+import storyRoutes from './src/routes/story';
 import friendRoutes from './src/routes/friend';
 import messageRoutes from './src/routes/message';
 import cookieParser from 'cookie-parser';
@@ -27,6 +28,7 @@ app.use('/login', loginRoutes);
 app.use('/profile', profileRoutes);
 app.use('/message', messageRoutes);
 app.use('/friend', friendRoutes);
+app.use('/story', storyRoutes);
 
 // Create HTTP server from Express app
 const httpServer = createServer(app);

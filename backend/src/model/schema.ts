@@ -48,13 +48,18 @@ export const chats = pgTable("chat", {
 });
 
 // ✅ Message Table
-export const messages = pgTable("message", {
+// Add this to your schema/model
+const messageTypeEnum = pgEnum("message_type", ["text", "image"]);
+
+export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  chatId: integer("chat_id").references(() => chats.id).notNull(),
-  senderId: integer("sender_id").references(() => users.id).notNull(),
-  content: text("content").notNull(),
+  chatId: integer("chat_id").notNull().references(() => chats.id),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  content: text("content").notNull(), // URL for images, plain text otherwise
+  type: messageTypeEnum("type").notNull().default("text"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow()
 });
+
 
 // ✅ UserChat Table (many-to-many relation: users <-> chats)
 export const userChats = pgTable("user_chat", {

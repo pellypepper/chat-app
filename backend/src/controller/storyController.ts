@@ -1,15 +1,28 @@
 import { Request, Response } from 'express';
 import { db } from '../util/db';
 import { stories, storyViews, friends, users } from '../model/schema';
-import { eq, and, or, gt } from 'drizzle-orm';
+import { eq, and,inArray, gt, desc } from 'drizzle-orm';
+import { compressAndUpload } from '../middleware/upload'; 
 
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+
+    }
+    interface Request {
+      user?: User;
+    }
+  }
+}
 const STORY_EXPIRY_HOURS = 24;
 
+// Upload a new story
 export const uploadStory = async (req: Request, res: Response) => {
   const userId = Number(req.user?.id);
-  const { content, type } = req.body; // type = 'text' or 'image' (URL)
+  const { content, type } = req.body;
 
-  if (!userId || !content || !['text', 'image'].includes(type)) {
+  if (!userId || (!content && !req.file) || !['text', 'image'].includes(type)) {
     res.status(400).json({ error: 'Missing or invalid fields' });
     return;
   }
@@ -18,9 +31,19 @@ export const uploadStory = async (req: Request, res: Response) => {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + STORY_EXPIRY_HOURS * 60 * 60 * 1000);
 
+    let storyContent = content;
+
+    if (type === 'image') {
+      if (!req.file) {
+        res.status(400).json({ error: 'Image file is required for type image' });
+        return;
+      }
+      storyContent = await compressAndUpload(req.file);
+    }
+
     const [newStory] = await db.insert(stories).values({
       userId,
-      content,
+      content: storyContent,
       type,
       createdAt: now,
       expiresAt,
@@ -32,6 +55,8 @@ export const uploadStory = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
 
 // Get all stories from friends that are still active (not expired)
 export const getFriendsStories = async (req: Request, res: Response) => {
@@ -60,11 +85,11 @@ export const getFriendsStories = async (req: Request, res: Response) => {
       .from(stories)
       .where(
         and(
-          stories.userId.in(friendIds),
-          gt(stories.expiresAt, now)
+ inArray(stories.userId, friendIds),
+      gt(stories.expiresAt, now)
         )
       )
-      .orderBy(stories.createdAt, 'desc');
+      .orderBy(desc(stories.createdAt));
 
     res.status(200).json({ stories: storiesList });
   } catch (error) {
@@ -131,7 +156,7 @@ export const getStoryViews = async (req: Request, res: Response) => {
       .from(storyViews)
       .innerJoin(users, eq(storyViews.viewerId, users.id))
       .where(eq(storyViews.storyId, storyId))
-      .orderBy(storyViews.viewedAt, 'desc');
+      .orderBy(desc(storyViews.viewedAt));
 
     res.status(200).json({ viewers, count: viewers.length });
   } catch (error) {
