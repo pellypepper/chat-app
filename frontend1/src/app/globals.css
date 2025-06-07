@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+:root {
+ --bg-color: #0d1117;
+  --text-color: white;
+}
+
+[data-theme='dark'] {
+ --bg-color:  white;
+  --text-color: #0d1117;
+}
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+@theme  {
+
+   /* main colors */
+  --color-secondary-bg: #ededed;
+  --color-primary-bg: #0d1117;
+  --color-tertiary-bg: #21262d;
+  --color-active-bg: #1c2128;
+  --color-border: #30363d;
+  
+  
+    /* Text Colors */
+  --text-primary: #e6edf3;
+  --text-secondary: #7d8590;
+  --text-white: white;
+
+  /* Accent Colors */
+  --success-green: #3fb950;
+  --error-red: #f85149;
+
+  /* Gradient Colors */
+  --gradient-blue: #58a6ff;
+--color-gradient-purple: linear-gradient(90deg, #5ba6ff, #a855f7);
+
+  --gradient-orange: #f97316;
+
+  /* Transparency Values */
+  --overlay-light: rgba(88, 166, 255, 0.1);
+  --overlay-purple: rgba(168, 85, 247, 0.1);
+  --color-navbar-bg: rgba(13, 17, 23, 0.95);
+  --color-gradient-text: linear-gradient(135deg, #58a6ff, #a855f7);
+  --color-card-bg: rgba(22, 27, 34, 0.8);
+  
+  --font-sans: #161b22;
+  --font-mono: var(--font-geist-mono);
+}
+
+.bg-gradient-purple {
+  background: linear-gradient(90deg, #5ba6ff, #a855f7);
+}
+.bg-gradient-feature {
+  background: linear-gradient(135deg, rgba(21, 26, 35, 0.8), rgba(13, 17, 23, 0.9));
+}
+.bg-gradient-started {
+ background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(168, 85, 247, 0.1));
+}
+
+   
+ .bg-gradient-content {
+   background: radial-gradient(ellipse at center, rgba(88, 166, 255, 0.1) 0%, transparent 50%);
+}
+ .bg-gradient-icon {
+  background: linear-gradient(135deg, #58a6ff, #a855f7);
+}
+
+
+
+.text-gradient-purple {
+  background: linear-gradient(90deg, #5ba6ff, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.border-primary {
+  border-color: var(--color-border);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+
+.text-white {
+  color: var(--text-white);
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ff0000;
+  }
+}
+
+body {
+background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+
+/* Main Colors
+--primary-bg: #0d1117;
+--secondary-bg: #161b22;
+--tertiary-bg: #21262d;
+--active-bg: #1c2128;
+--border: #30363d;
+
+/* Text Colors */
+/* --text-primary: #e6edf3;
+--text-secondary: #7d8590;
+--text-white: white; */
+
+/* Brand Gradient */
+/* --gradient-blue: #58a6ff;
+--gradient-purple: #a855f7;
+--gradient-orange: #f97316; */
+
+/* Accent Colors */
+/* --success-green: #3fb950;
+--error-red: #f85149; */
+
+/* Transparency Values */
+/* --overlay-light: rgba(88, 166, 255, 0.1);
+--overlay-purple: rgba(168, 85, 247, 0.1);
+--navbar-bg: rgba(13, 17, 23, 0.95);
+--card-bg: rgba(22, 27, 34, 0.8); */ 
