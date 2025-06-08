@@ -1,7 +1,7 @@
 'use client';
 
 import { useContext, useState } from 'react';
-import { ModalContext } from '../layout';
+import { ModalContext } from '../../layout';
 import SuccessPopup from '@/component/verificationpop';
 import ErrorPopup from '@/component/errorpopup';
 import { ArrowLeft } from 'lucide-react';

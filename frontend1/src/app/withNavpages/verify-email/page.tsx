@@ -2,12 +2,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 
 type VerifyCodeProps = {
-  onCancel?: () => void;
-  onVerify?: (otp: string) => void;
-  onResend?: () => void;
+ 
+ 
 };
 
-const VerifyCode: React.FC<VerifyCodeProps> = ({ onCancel, onVerify, onResend }) => {
+const VerifyCode: React.FC<VerifyCodeProps> = ({ }) => {
   const inputRefs = useRef<HTMLInputElement[]>([]);
   const [otp, setOtp] = useState(Array(6).fill(''));
   const [seconds, setSeconds] = useState(60);
@@ -47,27 +46,16 @@ const VerifyCode: React.FC<VerifyCodeProps> = ({ onCancel, onVerify, onResend })
     }
   };
 
-  const handleResend = () => {
-    setOtp(Array(6).fill(''));
-    setSeconds(60);
-    setResendAvailable(false);
-    onResend?.();
-    inputRefs.current[0]?.focus();
-  };
+ 
 
-  const handleVerify = () => {
-    const code = otp.join('');
-    if (code.length === 6) {
-      onVerify?.(code);
-    }
-  };
+  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-[#161b22] w-[90%] max-w-md rounded-2xl p-6 shadow-lg relative">
         {/* Close Button */}
         <button
-          onClick={onCancel}
+        
           className="absolute top-4 right-4 text-white text-2xl hover:text-red-500"
         >
           &times;
@@ -104,7 +92,7 @@ const VerifyCode: React.FC<VerifyCodeProps> = ({ onCancel, onVerify, onResend })
         <div className="text-center text-sm text-gray-400">
           {resendAvailable ? (
             <button
-              onClick={handleResend}
+        
               className="text-blue-400 hover:underline transition"
             >
               Resend Code
@@ -117,13 +105,13 @@ const VerifyCode: React.FC<VerifyCodeProps> = ({ onCancel, onVerify, onResend })
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 mt-6">
           <button
-            onClick={onCancel}
+   
             className="px-5 py-2 rounded-lg border border-gray-600 text-white bg-[#0d1117] hover:bg-[#1a1f2b] transition"
           >
             Cancel
           </button>
           <button
-            onClick={handleVerify}
+   
             className="px-5 py-2 rounded-lg text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg transition"
           >
             Verify Code

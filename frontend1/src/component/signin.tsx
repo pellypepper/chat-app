@@ -1,7 +1,7 @@
 
 // Signin.tsx - Fixed version with debugging
 'use client';
-import Link from 'next/link'
+
 import { useRouter } from 'next/navigation'; 
 
 type SigninProps = {
@@ -33,7 +33,7 @@ const Signin: React.FC<SigninProps> = ({ isOpen, onClose,  openRegister }) => {
 
     const handleForgotPassword = () => {
     onClose(); // Close modal first
-    router.push('/forget-password'); // Navigate to reset screen
+    router.push('/withNavpages/forget-password'); // Navigate to reset screen
   };
 
   // Don't render anything if not open
