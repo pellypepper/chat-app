@@ -1,9 +1,12 @@
 // src/routes/friends.ts
 import express from 'express';
 import { authenticateAccessToken } from '../middleware/auth';
-import { addFriend, getUserStatus, getFriends, removeFriend, searchFriends , getOnlineFriends} from '../controller/friendController';
+import { addFriend, getUserStatus, getFriends, removeFriend, searchFriends , getOnlineFriends, allUsers} from '../controller/friendController';
 
 const router = express.Router();
+
+//Get all users
+router.get('/all', authenticateAccessToken, allUsers)
 
 // Add a friend
 router.post('/add', authenticateAccessToken, addFriend);
@@ -15,7 +18,7 @@ router.get('/list', authenticateAccessToken, getFriends);
 router.get('/online', authenticateAccessToken, getOnlineFriends);
 
 // Remove a friend
-router.delete('/remove', authenticateAccessToken, removeFriend);
+router.post('/remove', authenticateAccessToken, removeFriend);
 
 // Search for friends
 router.get('/search', authenticateAccessToken, searchFriends);

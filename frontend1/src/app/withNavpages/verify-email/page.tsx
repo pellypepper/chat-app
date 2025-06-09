@@ -1,16 +1,31 @@
 'use client';
 import React, { useRef, useEffect, useState } from 'react';
-
+import { useAuthStore } from '@/store/registerStore';
+import { useSearchParams } from 'next/navigation';
+import SuccessPopup from '@/component/successPop';
+import  ErrorPopup  from '@/component/errorpopup';
+import { MultiRingSpinner } from '@/component/spinner';
+import { useRouter } from 'next/navigation';
 type VerifyCodeProps = {
  
- 
+  
 };
 
-const VerifyCode: React.FC<VerifyCodeProps> = ({ }) => {
+const VerifyCode: React.FC<VerifyCodeProps> = ({  }) => {
   const inputRefs = useRef<HTMLInputElement[]>([]);
   const [otp, setOtp] = useState(Array(6).fill(''));
   const [seconds, setSeconds] = useState(60);
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  
   const [resendAvailable, setResendAvailable] = useState(false);
+
+const searchParams = useSearchParams();
+  const tempState = searchParams.get('tempState');
+  const router = useRouter();
+
+  const {verifyEmail , isLoading, error} =  useAuthStore();
+
+
 
   // Countdown timer
   useEffect(() => {
@@ -26,9 +41,11 @@ const VerifyCode: React.FC<VerifyCodeProps> = ({ }) => {
     return () => clearInterval(timer);
   }, [seconds]);
 
+
+
   // Handle input changes
   const handleChange = (value: string, index: number) => {
-    if (!/^[0-9]?$/.test(value)) return; // Only allow digits or empty string
+  if (!/^[a-zA-Z0-9]?$/.test(value)) return; 
 
     const newOtp = [...otp];
     newOtp[index] = value;
@@ -46,7 +63,25 @@ const VerifyCode: React.FC<VerifyCodeProps> = ({ }) => {
     }
   };
 
- 
+const handleVerify = async () => {
+  if (!tempState) return;
+
+  await verifyEmail(tempState, otp.join(''));
+
+  if (!error) {
+    setVerificationStatus('success');
+
+    const timer = setTimeout(() => {
+      router.push('/withNavpages/signin');
+    }, 3000);
+    return () => clearTimeout(timer);
+  } else {
+    setVerificationStatus('error');
+  }
+};
+
+
+
 
   
 
@@ -68,7 +103,7 @@ const VerifyCode: React.FC<VerifyCodeProps> = ({ }) => {
           </div>
           <h2 className="text-xl font-semibold text-white mb-1">Enter Verification Code</h2>
           <p className="text-sm text-gray-400">
-            We've sent a 6-digit code to your email address. Please enter it below to verify your account.
+            We've sent a 6-digit code to this email {tempState}. Please enter it below to verify your account.
           </p>
         </div>
 
@@ -105,19 +140,41 @@ const VerifyCode: React.FC<VerifyCodeProps> = ({ }) => {
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 mt-6">
           <button
-   
+          onClick={() => window.history.back()}
             className="px-5 py-2 rounded-lg border border-gray-600 text-white bg-[#0d1117] hover:bg-[#1a1f2b] transition"
           >
             Cancel
           </button>
           <button
-   
+            onClick={handleVerify}
             className="px-5 py-2 rounded-lg text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-md hover:shadow-lg transition"
           >
             Verify Code
           </button>
         </div>
       </div>
+{verificationStatus === 'success' && (
+  <SuccessPopup
+    message={`Your email is verified. redirecting.. to signin page.`}
+    handleTimeout={()=>{} }
+    url="/withNavpages/signin"
+    tempState={null}
+  />
+)}
+
+    {verificationStatus === 'error' && (
+  <ErrorPopup
+    message={error || 'Unable to verify your email. Please try again.'}
+    handleTimeout={() => setVerificationStatus('idle')}
+  />
+)}
+
+      {isLoading && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <MultiRingSpinner />
+  </div>
+)}
+      
     </div>
   );
 };

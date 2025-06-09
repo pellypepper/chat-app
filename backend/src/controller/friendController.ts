@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import { db } from '../util/db';
 import { friends , users} from '../model/schema';
-import {and, eq ,or, like} from 'drizzle-orm';
+import {and, eq ,or, not, like} from 'drizzle-orm';
 import { onlineUsers, lastSeenMap } from '../util/socket';
 
 declare global {
@@ -17,7 +17,34 @@ declare global {
   }
 }
 
+export const allUsers = async (req: Request, res: Response) => {
+  const userId = Number(req.user?.id);
 
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  try {
+    const results = await db
+      .select({
+        id: users.id,
+        firstname: users.firstname,
+        lastname: users.lastname,
+        email: users.email,
+      })
+      .from(users)
+     .where(not(eq(users.id, userId))) // Exclude current user
+      .orderBy(users.firstname); // Alphabetical
+
+    res.status(200).json({ users: results });
+    return;
+  } catch (error) {
+    console.error('Fetch all users error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+    return;
+  }
+}
 // Add a friend
 export const addFriend = async (req: Request, res: Response) => {
   const userId = Number(req.user?.id);

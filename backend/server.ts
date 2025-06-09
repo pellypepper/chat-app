@@ -8,7 +8,7 @@ import storyRoutes from './src/routes/story';
 import friendRoutes from './src/routes/friend';
 import messageRoutes from './src/routes/message';
 import cookieParser from 'cookie-parser';
-
+import cors from 'cors';
 import { createServer } from 'http';
 import { initializeSocket } from './src/util/socket';
 
@@ -17,6 +17,11 @@ import { db } from './src/util/db';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

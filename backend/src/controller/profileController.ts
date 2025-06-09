@@ -57,7 +57,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   const updateFields: Record<string, string> = {};
   if (firstname !== undefined) updateFields.firstname = firstname.trim();
   if (lastname !== undefined) updateFields.lastname = lastname.trim();
-  if (email !== undefined) updateFields.email = email.trim();
+ 
 
   try {
     if (email) {
@@ -158,7 +158,7 @@ export const forgetPassword = async (req: Request, res: Response): Promise<void>
       expires: expires,
     });
 
-    const resetLink = `http://localhost:3000/profile/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    const resetLink = `http://localhost:3000/withNavpages/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
     await sendEmail(
       email,
       "Password Reset",

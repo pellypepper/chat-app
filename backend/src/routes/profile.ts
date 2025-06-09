@@ -1,9 +1,11 @@
 
 import { authenticateAccessToken } from '../middleware/auth';
-import {updateProfile, changePassword, forgetPassword, resetPassword} from '../controller/profileController';
+import {updateProfile, getProfile, changePassword, forgetPassword, resetPassword} from '../controller/profileController';
 import express from 'express';
 
 const router = express.Router();
+
+router.get('/', authenticateAccessToken, getProfile);
 
 // Update user profile
 router.put('/', authenticateAccessToken, updateProfile);

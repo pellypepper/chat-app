@@ -1,32 +1,35 @@
 'use client';
 
-import { useContext, useState } from 'react';
-import { ModalContext } from '../../layout';
-import SuccessPopup from '@/component/verificationpop';
+import { useState } from 'react';
+
+import SuccessPopup from '@/component/successPop';
 import ErrorPopup from '@/component/errorpopup';
 import { ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useProfileStore } from '@/store/profileStore';
 
 export default function ForgotPassword() {
-  const modalContext = useContext(ModalContext);
-  const toggleSignin = modalContext?.toggleSignin;
+ 
+ const router = useRouter();
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
+  const {forgotPassword } = useProfileStore();
+  const [email, setEmail] = useState('')
 
-  const handleSendResetLink = async () => {
-    try {
-      // Simulate a request or trigger your API here
-      const success = false; // Replace with actual response handling
 
-      if (success) {
-        setShowSuccess(true);
-      } else {
-        setShowError(true);
-      }
-    } catch  {
-      setShowError(true);
-    }
-  };
+ const handleSendResetLink = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  try {
+    await forgotPassword(email);
+
+      setShowSuccess(true);
+    
+  } catch {
+    setShowError(true);
+  }
+};
+
 
   const handleTimeout = () => {
     setShowSuccess(false);
@@ -66,12 +69,13 @@ export default function ForgotPassword() {
             <p className="text-secondary mt-2 text-sm">Reset your password</p>
           </div>
 
-          <form>
+          <form onSubmit={handleSendResetLink}>
             <div className="mb-5">
               <label className="block mb-2 text-[#e6edf3] text-sm font-medium">
                 Email Address
               </label>
               <input
+ onChange={(e) => setEmail(e.target.value)}
                 type="email"
                 placeholder="Enter your email address"
                 className="w-full p-4 bg-tertiary-bg border border-primary rounded-xl text-primary text-base focus:outline-none focus:border-[#58a6ff] focus:ring-4 focus:ring-[#58a6ff]/10"
@@ -79,8 +83,8 @@ export default function ForgotPassword() {
             </div>
 
             <button
-              type="button"
-              onClick={handleSendResetLink}
+              type="submit"
+            
               className="w-full p-4 mb-5 bg-gradient-to-r from-[#58a6ff] to-[#a855f7] rounded-xl text-white text-base font-semibold hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(88,166,255,0.3)] transition"
             >
               Send Reset Link
@@ -88,7 +92,7 @@ export default function ForgotPassword() {
 
             <div className="text-center mt-8 text-sm">
               Remember your password?{' '}
-              <a href="#" className="text-[#58a6ff] hover:underline" onClick={toggleSignin}>
+              <a href="#" className="text-[#58a6ff] hover:underline" onClick={() => router.push('/withNavpages/signin')}>
                 Sign In
               </a>
             </div>

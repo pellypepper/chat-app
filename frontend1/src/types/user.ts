@@ -1,22 +1,35 @@
 export interface User {
   id: number;
-  name: string;
-  username: string;
-  avatar: string;
-  status: 'online' | 'away' | 'offline';
-  isFriend: boolean;
-  mutualFriends: number;
+  firstname: string;
+  lastname: string;
+  email: string;
+
 }
 
 export type TabType = 'all' | 'online' | 'friends';
 
 export type Chat = {
-  id: string;
-  avatar: string;
-  online: boolean;
+  id: number;
   name: string;
+   participants: { id: number }[];
   message: string;
   time: string;
-  unread: number;
-  active: boolean;
 };
+
+export type Conversations= {
+        id: string;
+        avatar: string;
+        name: string;
+        message: string;
+        time: string;
+        unread: number;
+        online?: boolean;
+        active?: boolean;
+    };
+
+
+export type profile = {
+  firstname: string;
+  lastname: string;
+  email: string;
+}

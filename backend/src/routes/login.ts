@@ -1,5 +1,6 @@
 import express from 'express';
-import { login, googleLogin, googleLoginCallback, logout } from '../controller/loginController';
+import { login, googleLogin, googleLoginCallback, getCurrentUser , logout } from '../controller/loginController';
+import { authenticateAccessToken } from '../middleware/auth';   
 
 const router = express.Router();
 
@@ -8,6 +9,8 @@ router.post("/", login);
 
 // Google login route
 router.get("/google", googleLogin);
+
+router.get('/user',  authenticateAccessToken , getCurrentUser); 
 
 // Google callback
 router.get("/google/callback", googleLoginCallback);

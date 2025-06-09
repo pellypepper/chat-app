@@ -1,18 +1,18 @@
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
-
+import { useRouter } from 'next/navigation';
 
 type NavigationProps = {
   isOpen: boolean;
   handleClick: () => void;
-  openSignin: () => void;
 
 };
 
-const Navigation: React.FC<NavigationProps> = ({ isOpen, openSignin, handleClick}) => {
+const Navigation: React.FC<NavigationProps> = ({isOpen, handleClick }) => {
+  const router = useRouter();
   const handleSigninClick = () => {
    
-    openSignin();
+  router.push('/withNavpages/signin');
   };
 
   const handleMenuClick = () => {
@@ -35,7 +35,7 @@ const Navigation: React.FC<NavigationProps> = ({ isOpen, openSignin, handleClick
             backgroundClip: 'text',
           }}
         >
-         <Link href="/">  ChatApp</Link>
+         <Link href="/withNavpages">  ChatApp</Link>
         </h2>
 
         {/* Mobile menu button */}

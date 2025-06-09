@@ -3,6 +3,8 @@ import { sendEmail } from "../util/email";
 import geoip from 'geoip-lite';
 import passport from 'passport';
 import { generateAccessToken, generateRefreshToken } from '../middleware/auth';
+import jwt from 'jsonwebtoken';
+import {findUserById} from '../model/userModel';
 
 // Local login 
 export const login = (req: Request, res: Response, next: NextFunction) => {
@@ -96,12 +98,33 @@ export const googleLoginCallback = (req: Request, res: Response, next: NextFunct
     // Remove sensitive info from user object
     const { password, ...userSafe } = user;
 
+res.redirect('http://localhost:3000/dashboard');
 
-     res.status(200).json({
-      message: 'Google login successful',
-      user: userSafe
-    });
+
   })(req, res, next);
+};
+
+// GET current user 
+export const getCurrentUser = async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as { id: number })?.id;
+    if (!userId) {
+  res.status(401).json({ message: 'Invalid user in request' });
+      return 
+    }
+
+    const user = await findUserById(userId);
+    if (!user) {
+    res.status(404).json({ message: 'User not found' });
+       return
+    }
+
+    const { password, ...userSafe } = user;
+    res.status(200).json({ user: userSafe });
+  } catch (err) {
+    console.error("Failed to fetch user:", err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // Logout 

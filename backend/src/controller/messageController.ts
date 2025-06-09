@@ -180,60 +180,79 @@ export const getMessage = async (req: Request, res: Response): Promise<any> => {
 // Create a new chat
 export const createChat = async (req: Request, res: Response) => {
   const userId = Number(req.user?.id);
-  const { participantIds, name, isGroup } = req.body; // participantIds: number[]
+  const { participantIds, name, isGroup } = req.body;
 
   if (!userId || !participantIds || !Array.isArray(participantIds) || participantIds.length === 0) {
-   res.status(400).json({ error: 'Missing participants' });
-    return 
+    res.status(400).json({ error: 'Missing participants' });
+    return;
   }
 
-  // Add the creator to the participants if not already included
+  // Ensure current user is part of participants
   if (!participantIds.includes(userId)) participantIds.push(userId);
 
   try {
-    if (!isGroup && participantIds.length === 2) {
-      // For 1-on-1 chat, check if chat exists with exactly these two users
+    const participantsSorted = [...participantIds].sort();
 
-      // Find chats of userId
+    if (!isGroup && participantIds.length === 2) {
+      // ✅ Check for existing 1-on-1 chat
       const userChatsList = await db
         .select()
         .from(userChats)
         .where(eq(userChats.userId, userId));
 
-      const userChatIds = userChatsList.map(uc => uc.chatId);
-
-      // Find chats which include participantIds only (and exactly 2 users)
-      // This requires a bit of logic:
-      // We'll fetch chats with the participants and check counts.
+      const userChatIds = userChatsList.map((uc) => uc.chatId);
 
       const possibleChats = await db
         .select()
         .from(chats)
         .where(inArray(chats.id, userChatIds));
-    
 
       for (const chat of possibleChats) {
-        // Get all users in chat
+        if (chat.isGroup) continue;
+
         const chatUsers = await db
           .select()
           .from(userChats)
           .where(eq(userChats.chatId, chat.id));
 
-        const chatUserIds = chatUsers.map(cu => cu.userId).sort();
-        const participantsSorted = participantIds.slice().sort();
+        const chatUserIds = chatUsers.map((cu) => cu.userId).sort();
 
-        // Check if chat has exactly the same participants
         if (
           chatUserIds.length === participantsSorted.length &&
           chatUserIds.every((val, idx) => val === participantsSorted[idx])
         ) {
           res.status(200).json({ chat });
-           return
+          return;
         }
       }
     }
 
-    // Create new chat
+    if (isGroup && name) {
+      // ✅ Check for existing group chat with same name & same participants
+      const possibleGroupChats = await db
+        .select()
+        .from(chats)
+        .where(and(eq(chats.isGroup, true), eq(chats.name, name)));
+
+      for (const groupChat of possibleGroupChats) {
+        const chatUsers = await db
+          .select()
+          .from(userChats)
+          .where(eq(userChats.chatId, groupChat.id));
+
+        const chatUserIds = chatUsers.map((cu) => cu.userId).sort();
+
+        if (
+          chatUserIds.length === participantsSorted.length &&
+          chatUserIds.every((val, idx) => val === participantsSorted[idx])
+        ) {
+          res.status(200).json({ chat: groupChat });
+          return;
+        }
+      }
+    }
+
+    // ✅ Create new chat
     const [newChat] = await db
       .insert(chats)
       .values({
@@ -242,30 +261,26 @@ export const createChat = async (req: Request, res: Response) => {
       })
       .returning();
 
-    // Insert into userChats
-    const userChatEntries = participantIds.map(userId => ({
+    // ✅ Create user-chat relations
+    const userChatEntries = participantIds.map((userId) => ({
       chatId: newChat.id,
       userId,
     }));
 
     await db.insert(userChats).values(userChatEntries);
 
-// Emit to socket.io clients
-    participantIds.forEach(id => {
-  io.to(`user_${id}`).emit('chat_created', {
-    chat: newChat,
-  });
-});
-
+    // ✅ Emit to socket.io clients
+    participantIds.forEach((id) => {
+      io.to(`user_${id}`).emit('chat_created', { chat: newChat });
+    });
 
     res.status(201).json({ chat: newChat });
-     return
   } catch (error) {
     console.error('Create chat error:', error);
     res.status(500).json({ error: 'Internal server error' });
-     return
   }
 };
+
 
 // Send a message 
 export const sendMessage = async (req: Request, res: Response) => {
@@ -363,7 +378,7 @@ export const deleteChatForEveryone = async (req: Request, res: Response) => {
   }
 
   try {
-    // Optional: check if user is in the chat
+    // check if user is in the chat
     const isParticipant = await db
       .select()
       .from(userChats)

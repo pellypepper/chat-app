@@ -1,21 +1,38 @@
+"use client";
+
 import { FcGoogle } from "react-icons/fc";
-
-
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/loginStore";
+import { MultiRingSpinner } from "./spinner";
 type ContentProps = {
 
-  openRegister: () => void; // Optional prop for register functionality
+
 };
 
-const Content: React.FC<ContentProps> = ({  openRegister }) => {
 
 
+const Content: React.FC<ContentProps> = ({  }) => {
+
+  const { isLoading , error ,isAuthenticated, googleLogin} = useAuthStore();
+  const router = useRouter();
     
    const handleRegisterClick = () => {
  
-   openRegister();
+   router.push('/withNavpages/register');
   };
 
-    
+    const handleGoogleLogin = async () => {
+    try {
+      await googleLogin();
+      if (isAuthenticated) {
+        router.push('/withNavpages/dashboard');
+      }
+
+     
+    } catch (err) {
+      console.error("Google login failed:", err);
+    }
+  };
 
   return (
   <section id="home" className="relative min-h-screen flex items-center justify-center text-center px-[5%] bg-[radial-gradient(ellipse_at_center,_rgba(88,166,255,0.1)_0%,_transparent_50%)] overflow-hidden">
@@ -34,7 +51,7 @@ const Content: React.FC<ContentProps> = ({  openRegister }) => {
 
     <div className="flex justify-center gap-4 flex-wrap">
       <a  onClick={ handleRegisterClick} className="p-2   bg-gradient-purple font-medium text-sm px-8 py-4 rounded-xl">Get Started Free</a>
-      <a href="#features" className=" px-8 py-4   flex items-center gap-2 border font-medium text-sm rounded-xl"><FcGoogle size={24} />Contine with Google</a>
+      <a onClick={handleGoogleLogin} className=" px-8 py-4   flex items-center gap-2 border font-medium text-sm rounded-xl"><FcGoogle size={24} />Contine with Google</a>
     </div>
   </div>
 </section>

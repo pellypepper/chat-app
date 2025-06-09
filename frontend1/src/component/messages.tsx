@@ -1,19 +1,14 @@
 import React from 'react'
+import { Conversations } from '../types/user';
 type MessagesProps = {
-    conversations: {
-        id: string;
-        avatar: string;
-        name: string;
-        message: string;
-        time: string;
-        unread: number;
-        online?: boolean;
-        active?: boolean;
-    }[];
-
+   
+ conversations: Conversations[];
     onChatSelect: (chatId: string) => void;
 
+
 };
+
+
 
 const Messages : React.FC<MessagesProps> = ({ conversations, onChatSelect}) => {
 

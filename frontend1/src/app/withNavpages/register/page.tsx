@@ -1,50 +1,75 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PasswordSecurity from '@/component/passwordSecurity';
-
+import { useAuthStore } from '@/store/registerStore';
+import SuccessPopup from '@/component/successPop';
+import ErrorPopup from '../../../component/errorpopup';
+import { MultiRingSpinner } from '../../../component/spinner';
+import { useRouter } from 'next/navigation';
 type RegisterProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  openSignin: () => void;
+
 };
 
-const Register: React.FC<RegisterProps> = ({ isOpen, onClose, openSignin }) => {
+const Register: React.FC<RegisterProps> = ({ }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Optionally handle confirm password and errors/validation as needed
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+ 
+ const { register, isLoading, error, verificationSent } = useAuthStore();
 
-  const handleClose = () => {
-    onClose();
-  };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      handleClose();
-    }
-  };
+ const router = useRouter();
+  
 
   const handleSigninClick = () => {
-    openSignin();
-    handleClose();
+  router.push('/withNavpages/signin');
   };
 
-  if (!isOpen) {
-    return null;
+ useEffect(() => {
+  console.log('verificationSent:', verificationSent, 'error:', error);
+  if (verificationSent) {
+    setShowSuccess(true);
+    setShowError(false);
+  } else if (error) {
+    setShowError(true);
+    setShowSuccess(false);
   }
+}, [verificationSent, error]);
+
+
+  const handleSubmit = async(e: React.FormEvent) => {
+    e.preventDefault();
+
+   const data = {
+  firstname: firstName,
+  lastname: lastName,
+  email,
+  password,
+};
+
+   await register(data)
+   
+  
+}
+
+ 
+
+  
 
   return (
     <div id="register" className=''>
       <div
   className="fixed inset-0 z-50 flex items-start justify-center bg-navbar-bg bg-opacity-50 overflow-y-auto"
-  onClick={handleBackdropClick}
+
 >
         <div className="relative mt-25 bg-gradient-feature bg-white p-4 rounded-lg shadow-xl max-w-md w-full mx-4 border border-primary max-h-screen overflow-y-auto">
           {/* Close button */}
           <button
-            onClick={handleClose}
+  
             className="absolute top-4 right-4 text-secondary hover:text-gray-700 text-2xl font-bold leading-none"
           >
             X
@@ -66,7 +91,7 @@ const Register: React.FC<RegisterProps> = ({ isOpen, onClose, openSignin }) => {
               <p className="text-secondary">Join the conversation</p>
             </div>
 
-            <form>
+            <form  onSubmit={handleSubmit}>
               <div className="mb-2">
                 <label className="block mb-2 text-[#e6edf3] font-medium text-sm">First Name</label>
                 <input
@@ -113,12 +138,21 @@ const Register: React.FC<RegisterProps> = ({ isOpen, onClose, openSignin }) => {
                 <PasswordSecurity password={password} className="mt-3" />
               </div>
 
-              <button
-                type="button"
-                className="w-full py-4 bg-gradient-to-br from-[#58a6ff] to-[#a855f7] rounded-xl text-white text-base font-semibold cursor-pointer transition-transform duration-200 ease-in-out mb-5 hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(88,166,255,0.3)]"
-              >
-                Create Account
-              </button>
+            <button
+  type="submit"
+  disabled={isLoading}
+  className={`w-full py-4 bg-gradient-to-br from-[#58a6ff] to-[#a855f7] rounded-xl text-white text-base font-semibold cursor-pointer transition-transform duration-200 ease-in-out mb-5 ${
+    isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(88,166,255,0.3)]'
+  }`}
+>
+  {isLoading ? 'Creating Account...' : 'Create Account'}
+</button>
+{error && (
+  <div className="text-red-500 text-sm mt-2 text-center">
+    {error}
+  </div>
+)}
+
 
               <div className="text-center mt-3 text-[#e6edf3] text-sm">
                 Already have an account?{' '}
@@ -130,6 +164,29 @@ const Register: React.FC<RegisterProps> = ({ isOpen, onClose, openSignin }) => {
           </div>
         </div>
       </div>
+
+      {showSuccess && (
+        <SuccessPopup
+          message={`A verification code has been sent to ${email}. Click continue to input your code.`}
+          handleTimeout={() => setShowSuccess(false)}
+          url="/withNavpages/verify-email"
+          showContinueButton
+          tempState={email}
+        />
+      )}
+
+      {showError && !showSuccess && (
+        <ErrorPopup
+          message={error || 'An error occurred while creating your account. Please try again.'}
+          handleTimeout={() => setShowError(false)}
+        />
+      )}
+
+      {isLoading && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+    <MultiRingSpinner />
+  </div>
+)}
     </div>
   );
 };
