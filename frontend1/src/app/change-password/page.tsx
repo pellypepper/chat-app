@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react';
 import { EyeIcon, EyeSlashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import PasswordSecurity from '@/component/passwordSecurity'; // Adjust path as needed
- import { passwordRequirements } from '@/component/passwordSecurity'; 
+import { passwordRequirements } from '@/component/passwordSecurity'; 
+import { useProfileStore } from '@/store/profileStore';
+import { useRouter } from 'next/navigation';
+import SuccessPopup from '@/component/successPop';
+import ErrorPopup from '@/component/errorpopup';
 
-interface ChangePasswordProps {
-  onClose: () => void;
-  onSuccess?: () => void;
-}
+interface ChangePasswordProps {}
 
-export default function ChangePasswordModal({ onClose, onSuccess }: ChangePasswordProps) {
+export default function ChangePasswordModal({}: ChangePasswordProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,8 +19,13 @@ export default function ChangePasswordModal({ onClose, onSuccess }: ChangePasswo
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingLocal, setIsLoadingLocal] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const { changePassword, isLoading } = useProfileStore();
+  const router = useRouter();
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -51,35 +57,60 @@ export default function ChangePasswordModal({ onClose, onSuccess }: ChangePasswo
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  console.log('Submitting change password form');
+  if (!validateForm()) return;
 
-    if (!validateForm()) return;
+  if (currentPassword === newPassword) {
+    setErrors({ newPassword: 'New password must be different from current password' });
+    return;
+  }
 
-    if (currentPassword === newPassword) {
-      setErrors({ newPassword: 'New password must be different from current password' });
-      return;
-    }
+  console.log('Form is valid, proceeding with password change');
+  setIsLoadingLocal(true);
+  setProgress(0);
 
-    setIsLoading(true);
+  try {
+    console.log('Changing password...');
+    await changePassword(currentPassword, newPassword);
+    console.log('Password change successful');
+
+    // Animate the progress bar from 0 to 100 over 3 seconds
+    let step = 0;
+    const duration = 3000; // 3 seconds
+    const intervalTime = 30; // ms
+    const totalSteps = duration / intervalTime;
+    const increment = 100 / totalSteps;
     setProgress(0);
 
-    const progressInterval = setInterval(() => {
+    const interval = setInterval(() => {
       setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setTimeout(() => {
-            setIsLoading(false);
-            onSuccess?.();
-            handleClose();
-          }, 500);
-          return 100;
-        }
-        return prev + 25;
-      });
-    }, 200);
-  };
+        if (prev + increment >= 100) {
+          clearInterval(interval);
+          setProgress(100);
+          setIsLoadingLocal(false);
+          setShowSuccess(true);
 
+          // Show success for 2 seconds, then close and redirect
+          setTimeout(() => {
+            setShowSuccess(false);
+            router.push('/dashboard');
+            handleClose();
+          }, 2000);
+        }
+        return Math.min(prev + increment, 100);
+      });
+    }, intervalTime);
+  } catch (err: any) {
+    setShowError(true);
+    setErrorMsg(
+      err?.message ||
+      (typeof err === 'string' ? err : 'Error changing password')
+    );
+    setIsLoadingLocal(false);
+  }
+};
   const handleClose = () => {
     setCurrentPassword('');
     setNewPassword('');
@@ -88,9 +119,11 @@ export default function ChangePasswordModal({ onClose, onSuccess }: ChangePasswo
     setShowNewPassword(false);
     setShowConfirmPassword(false);
     setErrors({});
-    setIsLoading(false);
+    setIsLoadingLocal(false);
     setProgress(0);
-    onClose();
+    setShowSuccess(false);
+    setShowError(false);
+    setErrorMsg('');
   };
 
   useEffect(() => {
@@ -105,15 +138,12 @@ export default function ChangePasswordModal({ onClose, onSuccess }: ChangePasswo
     }
   }, [newPassword, confirmPassword]);
 
-
-
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl max-w-md w-full relative animate-in fade-in-0 zoom-in-95 duration-300">
         {/* Close button */}
         <button
-      onClick={() => window.history.back()}
-
+          onClick={() => window.history.back()}
           className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-gray-800"
         >
           <XMarkIcon className="h-6 w-6" />
@@ -132,7 +162,7 @@ export default function ChangePasswordModal({ onClose, onSuccess }: ChangePasswo
           </p>
         </div>
 
-        {isLoading ? (
+        {(isLoadingLocal || isLoading) ? (
           <div className="px-8 pb-8">
             <div className="text-center mb-6">
               <div className="w-12 h-12 mx-auto mb-4 border-3 border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
@@ -140,7 +170,7 @@ export default function ChangePasswordModal({ onClose, onSuccess }: ChangePasswo
               <p className="text-gray-400 text-sm">Please wait while we update your password</p>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-1 overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               ></div>
@@ -253,8 +283,7 @@ export default function ChangePasswordModal({ onClose, onSuccess }: ChangePasswo
             <div className="flex gap-3">
               <button
                 type="button"
-               onClick={() => window.history.back()}
-
+                onClick={() => window.history.back()}
                 className="flex-1 px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
               >
                 Cancel
@@ -267,6 +296,24 @@ export default function ChangePasswordModal({ onClose, onSuccess }: ChangePasswo
               </button>
             </div>
           </form>
+        )}
+
+        {/* Success Popup */}
+        {showSuccess && (
+          <SuccessPopup
+            message="Password changed successfully!"
+            handleTimeout={handleClose}
+            url="/dashboard"
+            tempState={null}
+          />
+        )}
+
+        {/* Error Popup */}
+        {showError && (
+          <ErrorPopup
+            message={errorMsg || "Error changing password"}
+            handleTimeout={() => setShowError(false)}
+          />
         )}
       </div>
     </div>

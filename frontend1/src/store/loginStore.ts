@@ -7,6 +7,7 @@ axios.defaults.withCredentials = true;
 axios.defaults.baseURL = "http://localhost:4000"; // Adjust if needed
 
 interface User {
+  id: number;
   firstname: string;
   lastname: string;
   email: string;

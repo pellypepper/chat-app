@@ -1,5 +1,5 @@
 import  Express  from "express";
-import { getMessage, sendMessage,  getUserChatsSummary, createChat, deleteChatForEveryone, deleteMessageForUser} from "../controller/messageController";
+import { getMessage, sendMessage,  getUserChatsSummary, createChat, deleteChatForEveryone, deleteMessageForEveryone} from "../controller/messageController";
 import { authenticateAccessToken } from "../middleware/auth";
 import { upload } from "../middleware/upload";
 
@@ -12,7 +12,7 @@ router.get("/message-list",  authenticateAccessToken,  getUserChatsSummary);
 router.post("/send-message", authenticateAccessToken, upload.single("image"), sendMessage);
 router.post("/create-chat",  authenticateAccessToken,  createChat);
 router.delete("/delete-everyone/:chatId",  authenticateAccessToken, deleteChatForEveryone);
-router.delete("/delete-user/:messageId", authenticateAccessToken, deleteMessageForUser);
+router.delete("/delete-user/:messageId", authenticateAccessToken, deleteMessageForEveryone);
 
 
 export default router;

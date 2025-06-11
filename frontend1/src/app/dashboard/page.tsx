@@ -6,20 +6,28 @@ import Rightdashboard from "@/component/rightdashboard";
 import ProfileDetails from '@/component/profileDetails';
 import { useChatStore } from '@/store/messageStore';
 import { useAuthStore } from '@/store/loginStore';
-
+import CreateGroup from '@/component/createGroup';
 import type { Chat } from '@/types/user';
 import { MultiRingSpinner } from '@/component/spinner';
+import { useFriendsStore } from '@/store/friendStore';
+import { allUsers } from '@/data/user';
 
 const Dashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-
-  const { user, isAuthenticated, getSession } = useAuthStore();
-  const { chat } = useChatStore();
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const {  isAuthenticated, getSession } = useAuthStore();
+  const { chats ,  fetchChatsSummary} = useChatStore();
   // Loading states and text stages
   const [loading, setLoading] = useState(true);
   const [loadingStage, setLoadingStage] = useState<'redirecting' | 'authenticating'>('redirecting');
+ const {
 
+    fetchFriends,
+    fetchOnlineFriends,
+    fetchAllUsers,
+
+  } = useFriendsStore();
 
   //fetch user session on mount
   useEffect(() => {
@@ -56,15 +64,63 @@ const Dashboard = () => {
     }
   }, [isAuthenticated]);
 
+    useEffect(() => {
+      
+      fetchAllUsers();
+      fetchFriends();
+      fetchChatsSummary(); // Add this to load existing chats
+      fetchOnlineFriends();
+
+
+    }, [fetchAllUsers,  fetchFriends, fetchOnlineFriends, fetchChatsSummary]);
+  
+
   const handleClick = () => setIsOpen(true);
   const handleClose = () => setIsOpen(false);
 
 
 
-const handleChatSelect = (chatId: number) => {
-  const selected = chat.find((c: Chat) => Number(c.id) === chatId) || null;
-  setSelectedChat(selected as Chat | null);
+const handleChatSelect = async(chatId: number, optionalChat?: Chat) => {
+
+  if (optionalChat) {
+    setSelectedChat(optionalChat);
+    return;
+  }
+
+  const selected = chats.find(c => Number(c.id) === chatId) || null;
+
+  if (!selected) {
+    console.error("No chat found with id:", chatId);
+    setSelectedChat(null);
+    return;
+  }
+
+  if (!Array.isArray(selected.participants)) {
+    console.error("Chat found, but participants missing for chat id:", chatId, selected);
+    setSelectedChat(null);
+    return;
+  }
+
+const normalizedSelected = {
+  ...selected,
+  participants: selected.participants.map((p: any) => ({
+    id: p.id,
+    name: p.name ?? '',
+  })),
+  lastMessage: selected.lastMessage ?? undefined,
+  lastMessageAt: selected.lastMessageAt ?? undefined,
 };
+
+setSelectedChat(normalizedSelected);
+};
+
+const handleGroup = () => {
+  setShowCreateGroup(!showCreateGroup);
+}
+
+const handleClickOutside = () => {
+  setShowCreateGroup(false);
+}
 
   const handleBack = () => setSelectedChat(null);
 
@@ -95,17 +151,17 @@ const handleChatSelect = (chatId: number) => {
         {selectedChat ? (
           <Rightdashboard chat={selectedChat} onBack={handleBack} />
         ) : (
-          <Leftdashboard  onChatSelect={handleChatSelect} handleClick={handleClick} />
+          <Leftdashboard handleGroup={handleGroup}  onChatSelect={handleChatSelect} handleClick={handleClick} />
         )}
       </div>
 
       {/* Desktop View */}
       <div className="hidden md:grid md:grid-cols-[45%_55%] overflow-hidden">
         <div className="overflow-hidden">
-          <Leftdashboard onChatSelect={handleChatSelect} handleClick={handleClick} />
+          <Leftdashboard handleGroup={handleGroup} onChatSelect={handleChatSelect} handleClick={handleClick} />
         </div>
         <div className="overflow-hidden">
-          <Rightdashboard onBack={handleBack} chat={selectedChat} />
+          <Rightdashboard  onBack={handleBack} chat={selectedChat} />
         </div>
       </div>
 
@@ -124,6 +180,12 @@ const handleChatSelect = (chatId: number) => {
         </button>
         <ProfileDetails />
       </div>
+
+
+   <div className={`${showCreateGroup ? "block" : "hidden"} absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center h-full border p-4 md:p-8 z-[100]`}>
+    <CreateGroup handleClickOutside={handleClickOutside}  />
+</div>
+
     </div>
   );
 };

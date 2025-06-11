@@ -1,4 +1,5 @@
-import {create} from 'zustand';
+
+import { create } from 'zustand';
 import axios from 'axios';
 
 axios.defaults.withCredentials = true;
@@ -18,19 +19,19 @@ interface UserStatus {
 }
 
 interface FriendsState {
-    allUsers: Friend[];
+  allUsers: Friend[];
   friends: Friend[];
   onlineFriends: number[]; // just IDs of online friends
   searchResults: Friend[];
-  userStatus: UserStatus | null;
+  // userStatus and status removed, not needed for per-user status anymore
   loading: boolean;
   error: string | null;
 
   fetchFriends: () => Promise<void>;
   fetchOnlineFriends: () => Promise<void>;
-    fetchAllUsers: () => Promise<void>;
+  fetchAllUsers: () => Promise<void>;
   searchFriends: (query: string) => Promise<void>;
-  getUserStatus: (userId: number) => Promise<void>;
+  getUserStatus: (userId: number) => Promise<'online' | 'offline'>; // return status directly
   addFriend: (friendId: number) => Promise<void>;
   removeFriend: (friendId: number) => Promise<void>;
   clearSearch: () => void;
@@ -41,16 +42,13 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   friends: [],
   onlineFriends: [],
   searchResults: [],
-  userStatus: null,
   loading: false,
   error: null,
 
-  fetchAllUsers: async()=>{
+  fetchAllUsers: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await axios.get('/friend/all'); 
-    
-     
+      const res = await axios.get('/friend/all');
       set({ allUsers: res.data.users, loading: false });
     } catch (error: any) {
       set({ error: error.message, loading: false });
@@ -60,9 +58,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   fetchFriends: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await axios.get('/friend/list'); 
- 
-   
+      const res = await axios.get('/friend/list');
       set({ friends: res.data.friends, loading: false });
     } catch (error: any) {
       set({ error: error.message, loading: false });
@@ -73,7 +69,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await axios.get('/friend/online');
-
+      // Online friends are just IDs
       set({ onlineFriends: res.data.online, loading: false });
     } catch (error: any) {
       set({ error: error.message, loading: false });
@@ -88,45 +84,55 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await axios.get(`/friend/search?query=${encodeURIComponent(query)}`);
-    
       set({ searchResults: res.data.results, loading: false });
     } catch (error: any) {
       set({ error: error.message, loading: false });
     }
   },
+    getUserSeen: async (userId: number) => {
 
-  getUserStatus: async (userId: number) => {
-    set({ loading: true, error: null });
     try {
+       const { onlineFriends } = get();
+const isOnline = onlineFriends.includes(userId)
+if (isOnline) {
+          return { status: 'online', lastSeen: null };
+        }
       const res = await axios.get(`/friend/status/${userId}`);
-   
-      set({ userStatus: res.data, loading: false });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
-    }
+      
+    return {
+      lastSeen: res.data.lastSeen,
+      status: res.data.status,
+    };
+  } catch (error: any) {
+    return { lastSeen: null, status: 'offline' };
+  }
+},
+
+  // FIX: getUserStatus now returns status based on onlineFriends state, not from API
+  getUserStatus: async (userId: number) => {
+    const { onlineFriends } = get();
+    return onlineFriends.includes(userId) ? 'online' : 'offline';
   },
 
   addFriend: async (friendId: number) => {
     set({ loading: true, error: null });
     try {
-        console.log('Adding friend with ID:', friendId);
-   await axios.post('/friend/add', { friendId }, {
-  headers: { 'Content-Type': 'application/json' }
-});
-       console.log('Friend added successfully');
+      await axios.post('/friend/add', { friendId }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
       await get().fetchFriends();
       await get().fetchOnlineFriends();
       set({ loading: false });
     } catch (error: any) {
-   const message = error.response?.data?.error || error.message || 'Unknown error';
-    set({ error: message, loading: false });
+      const message = error.response?.data?.error || error.message || 'Unknown error';
+      set({ error: message, loading: false });
     }
   },
 
   removeFriend: async (friendId: number) => {
     set({ loading: true, error: null });
     try {
-      await axios.post('/friend/remove', {friendId });
+      await axios.post('/friend/remove', { friendId });
       await get().fetchFriends();
       await get().fetchOnlineFriends();
       set({ loading: false });

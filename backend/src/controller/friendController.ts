@@ -1,8 +1,8 @@
 // src/controllers/friends.ts
 import { Request, Response } from 'express';
 import { db } from '../util/db';
-import { friends , users} from '../model/schema';
-import {and, eq ,or, not, like} from 'drizzle-orm';
+import { friends , users, userChats, chats,messages} from '../model/schema';
+import {and, eq ,or, not, like, inArray} from 'drizzle-orm';
 import { onlineUsers, lastSeenMap } from '../util/socket';
 
 declare global {
@@ -123,17 +123,16 @@ export const removeFriend = async (req: Request, res: Response) => {
   const { friendId } = req.body;
 
   if (!userId || !friendId) {
-  res.status(400).json({ error: 'Missing user or friend ID' });
-    return 
+    res.status(400).json({ error: 'Missing user or friend ID' });
+    return;
   }
 
   if (userId === friendId) {
-  res.status(400).json({ error: 'You cannot remove yourself as a friend' });
-     return
+    res.status(400).json({ error: 'You cannot remove yourself as a friend' });
+    return;
   }
 
   try {
-
     // Check if friendship exists
     const existing = await db
       .select()
@@ -141,31 +140,77 @@ export const removeFriend = async (req: Request, res: Response) => {
       .where(and(eq(friends.userId, userId), eq(friends.friendId, friendId)));
 
     if (!existing.length) {
-res.status(404).json({ error: 'Friend not found' });
-      return 
+      res.status(404).json({ error: 'Friend not found' });
+      return;
     }
-     
+
     // Remove both directions of the friendship
     await db
       .delete(friends)
       .where(and(eq(friends.userId, userId), eq(friends.friendId, friendId)));
-
     await db
       .delete(friends)
       .where(and(eq(friends.userId, friendId), eq(friends.friendId, userId)));
-res.status(200).json({ message: 'Friend removed' });
 
-    return 
+    // --- Remove any 1-on-1 chat between these users ---
+    // 1. Find all non-group chats for the user
+    const userChatIds = (
+      await db
+        .select({ chatId: userChats.chatId })
+        .from(userChats)
+        .where(eq(userChats.userId, userId))
+    ).map(row => row.chatId);
+
+    if (userChatIds.length > 0) {
+      // 2. Of those, find a non-group chat that includes friendId and only these two users
+      const possibleChats = await db
+        .select()
+        .from(chats)
+        .where(and(
+          inArray(chats.id, userChatIds),
+          eq(chats.isGroup, false)
+        ));
+
+      for (const chat of possibleChats) {
+        // Find all participants in this chat
+        const chatParticipants = await db
+          .select({ userId: userChats.userId })
+          .from(userChats)
+          .where(eq(userChats.chatId, chat.id));
+
+        const chatParticipantIds = chatParticipants.map(p => p.userId).sort();
+        const targetIds = [userId, friendId].sort();
+
+        if (
+          chatParticipantIds.length === 2 &&
+          chatParticipantIds[0] === targetIds[0] &&
+          chatParticipantIds[1] === targetIds[1]
+        ) {
+          // Delete messages in the chat
+          await db.delete(messages).where(eq(messages.chatId, chat.id));
+          // Delete user-chat links
+          await db.delete(userChats).where(eq(userChats.chatId, chat.id));
+          // Delete the chat itself
+          await db.delete(chats).where(eq(chats.id, chat.id));
+        }
+      }
+    }
+    // --------------------------------------------------
+
+    res.status(200).json({ message: 'Friend removed and chat (if any) deleted' });
+    return;
   } catch (error) {
     console.error('Remove friend error:', error);
- res.status(500).json({ error: 'Internal server error' });
-     return
+    res.status(500).json({ error: 'Internal server error' });
+    return;
   }
 };
-
 // Get online friends
 export const getOnlineFriends = async (req: Request, res: Response) => {
   const userId = Number(req.user?.id);
+
+  console.log("Checking online friends for user:", userId);
+  console.log("All online users:", Array.from(onlineUsers.keys()));
 
   if (!userId) {
     res.status(401).json({ error: 'Unauthorized' });
@@ -180,9 +225,11 @@ export const getOnlineFriends = async (req: Request, res: Response) => {
       .where(eq(friends.userId, userId));
 
     const friendIds = friendRecords.map(f => f.friendId);
+    console.log("Friend IDs:", friendIds);
 
     // Filter friends who are currently online
     const onlineFriendIds = friendIds.filter(id => onlineUsers.has(id));
+    console.log("Online friend IDs:", onlineFriendIds);
 
     res.status(200).json({ online: onlineFriendIds });
     return;
@@ -232,7 +279,7 @@ export const searchFriends = async (req: Request, res: Response) => {
   }
 };
 
-// Get user status (online/offline)
+// Get user status (online/offline) - FIXED VERSION
 export const getUserStatus = async (req: Request, res: Response) => {
   const userId = Number(req.params.userId);
 
@@ -241,12 +288,22 @@ export const getUserStatus = async (req: Request, res: Response) => {
     return;
   }
 
-  const isOnline = onlineUsers.has(userId);
-  const lastSeen = lastSeenMap.get(userId) || null;
+  // Debug logging
+  console.log(`Getting status for user ${userId}`);
+  console.log('Online users:', Array.from(onlineUsers.keys()));
+  console.log('Last seen map:', Array.from(lastSeenMap.entries()));
 
-  res.status(200).json({
+  const isOnline = onlineUsers.has(userId);
+  const lastSeenDate = lastSeenMap.get(userId);
+
+  console.log(`User ${userId} - isOnline: ${isOnline}, lastSeenDate:`, lastSeenDate);
+
+  const response = {
     userId,
     status: isOnline ? 'online' : 'offline',
-    lastSeen: isOnline ? null : lastSeen,
-  });
+    lastSeen: isOnline ? null : (lastSeenDate ? lastSeenDate.toISOString() : null),
+  };
+
+  console.log('Response:', response);
+  res.status(200).json(response);
 };

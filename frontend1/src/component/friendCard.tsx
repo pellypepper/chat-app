@@ -1,32 +1,31 @@
-
 import { getStatusColor } from '../utils/friendHelper';
-import {User} from '@/types/user'; 
+import { User } from '@/types/user'; 
 
 interface FriendCardProps {
   user: User;
   isFriend: boolean; 
+  status: string; // Status passed from parent
   onMessage?: (id: number) => void;
   onAdd?: (id: number) => void;
   onRemove?: (id: number) => void;
+
 }
 
-
-
-const FriendCard: React.FC<FriendCardProps> = ({ user, onMessage, onAdd, onRemove, isFriend }) => {
+const FriendCard: React.FC<FriendCardProps> = ({ user, onMessage, onAdd, onRemove,  isFriend, status }) => {
   return (
     <div className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-xl hover:bg-gray-800/70 transition-colors">
       <div className="relative">
         <div className="w-12 h-12 bg-gradient-purple rounded-full flex items-center justify-center text-primary font-semibold">
           {user.firstname?.[0] || ""}{user.lastname?.[0] || ""}
         </div>
-        <div className={`absolute bottom-0 right-0 w-3 h-3 ${getStatusColor(user.status)} border-2 border-primary rounded-full`} />
+        <div className={`absolute bottom-0 right-0 w-3 h-3 ${getStatusColor(status as "online" | "away" | "offline")} border-2 border-primary rounded-full`} />
       </div>
       <div className="flex justify-between items-center w-full">
         <div className="font-semibold text-primary">{user.firstname}</div>
         <div className="flex flex-col gap-2">
           {isFriend ? (
             <>
-              <button onClick={() => onMessage?.(user.id)} className="px-3  py-1 bg-[#58a6ff] text-primary rounded-lg hover:bg-blue-700 transition-colors text-sm">
+              <button onClick={() => onMessage?.(user.id)} className="px-3 py-1 bg-[#58a6ff] text-primary rounded-lg hover:bg-blue-700 transition-colors text-sm">
                 Message
               </button>
               {onRemove && (

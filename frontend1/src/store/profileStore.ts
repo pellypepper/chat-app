@@ -59,20 +59,25 @@ export const useProfileStore = create<ProfileState>()(
       }
     },
 
-    changePassword: async (currentPassword, newPassword) => {
-      set({ isLoading: true, error: null, message: null });
-      try {
-        const res = await axios.post("/profile/change-password", {
-          currentPassword,
-          newPassword,
-        });
-        set({ message: res.data.message });
-      } catch (err: any) {
-        set({ error: err.response?.data?.error || err.message });
-      } finally {
-        set({ isLoading: false });
-      }
-    },
+changePassword: async (currentPassword, newPassword) => {
+  set({ isLoading: true, error: null, message: null });
+  try {
+    const res = await axios.put("/profile/change-password", {
+      currentPassword,
+      newPassword,
+    });
+    set({ message: res.data.message });
+    return res.data;
+  } catch (err: any) {
+ 
+    const backendError = err.response?.data?.error || err.response?.data?.message || err.message;
+   
+    set({ error: backendError });
+    throw new Error(backendError); 
+  } finally {
+    set({ isLoading: false });
+  }
+},
 
     forgotPassword: async (email) => {
       set({ isLoading: true, error: null, message: null });

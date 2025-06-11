@@ -1,45 +1,116 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import FriendCard from './friendCard';
 import TabNavigation from './friendTabNav';
 import SearchInput from './searchInput';
 import { getFilteredUsers } from '../utils/friendHelper';
 import { useFriendsStore } from '@/store/friendStore';
 import { useChatStore } from '@/store/messageStore';
+import { useAuthStore } from '@/store/loginStore';
+import type { Chat, User } from '@/types/user';
+import io, { Socket } from "socket.io-client";
 
+const SOCKET_URL = "http://localhost:4000";
+
+let socket: Socket | null = null;
 type FriendProps = {
-    onChatSelect: (chatId: string) => void;
+    onChatSelect: (chatId: number, hat?: Chat) => void;
 };
 
-const Friends : React.FC<FriendProps> = ({ onChatSelect }) => {
+const Friends: React.FC<FriendProps> = ({ onChatSelect }) => {
   const {
     allUsers,
     friends,
-    onlineFriends,
     loading,
+  
     error,
     fetchFriends,
     fetchOnlineFriends,
-    fetchAllUsers,
     addFriend,
     removeFriend,
     searchFriends,
     clearSearch,
+
   } = useFriendsStore();
 
-  const { chats, fetchChatsSummary, fetchMessages, createChat } = useChatStore();
-
+  const { fetchChatsSummary, createChat } = useChatStore();
+  
+  // State to store user statuses
+  const [userStatuses, setUserStatuses] = useState<Record<number, string>>({});
+  
+  // Ensure participants have both id and name fields
+  const chats: Chat[] = useChatStore.getState().chats.map(chat => ({
+    ...chat,
+    participants: chat.participants.map(p => ({
+      id: p.id,
+      name: (p as any).name ?? '',
+    })),
+    lastMessage: chat.lastMessage === null ? undefined : chat.lastMessage,
+    lastMessageAt: chat.lastMessageAt === null ? undefined : chat.lastMessageAt,
+  }));
+  
+  const user = useAuthStore(state => state.user);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchAllUsers();
-    fetchFriends();
-    fetchChatsSummary(); // Add this to load existing chats
-    fetchOnlineFriends();
-  }, [fetchAllUsers, fetchFriends, fetchOnlineFriends, fetchChatsSummary]);
+  // Memoized function to fetch all user statuses
+const fetchUserStatuses = useCallback(() => {
+  const onlineIds = useFriendsStore.getState().onlineFriends;
+   let filteredUsers: User[] = [];
+  if (searchQuery.trim()) {
+    // Use backend results only for search
+    filteredUsers = useFriendsStore.getState().searchResults;
+  } else {
+    // Use local filtering for tabs when not searching
+    filteredUsers = getFilteredUsers(activeTab, "");
+  }
 
-  // Update search - if query is empty, clear results, else fetch search results
+  // Set status based on whether user is in onlineFriends array
+  const statusMap: Record<number, string> = {};
+  filteredUsers.forEach(user => {
+    statusMap[user.id] = onlineIds.includes(user.id) ? 'online' : 'offline';
+  });
+  setUserStatuses(statusMap);
+}, [activeTab, searchQuery]);
+
+  // Socket connection logic (unchanged)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    if (!socket) {
+      socket = io(SOCKET_URL, {
+        query: { userId: user.id.toString() },
+        transports: ["websocket", "polling"],
+        autoConnect: true,
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        timeout: 20000,
+      });
+    }
+
+    const handleStatusChange = () => {
+      fetchOnlineFriends();
+      // Refetch statuses when users come online/offline
+      fetchUserStatuses();
+    };
+
+    socket.on('user_online', handleStatusChange);
+    socket.on('user_offline', handleStatusChange);
+
+    fetchOnlineFriends();
+
+    return () => {
+      socket?.off('user_online', handleStatusChange);
+      socket?.off('user_offline', handleStatusChange);
+    };
+  }, [user?.id, fetchOnlineFriends, fetchUserStatuses]);
+
+  // Fetch user statuses when filtered users change
+  useEffect(() => {
+    fetchUserStatuses();
+  }, [fetchUserStatuses]);
+
+  // Search logic (unchanged)
   useEffect(() => {
     if (!searchQuery.trim()) {
       clearSearch();
@@ -48,13 +119,13 @@ const Friends : React.FC<FriendProps> = ({ onChatSelect }) => {
     }
   }, [searchQuery, searchFriends, clearSearch]);
 
-  // Choose which users to show
+  // Get filtered users
   const usersToFilter = searchQuery.trim() ? useFriendsStore.getState().searchResults : allUsers;
-
   const filteredUsers = getFilteredUsers(activeTab, searchQuery).filter(user =>
     usersToFilter.some(u => u.id === user.id)
   );
 
+  // Handler functions (unchanged)
   const handleAddFriend = async (userId: number) => {
     await addFriend(userId);
     await fetchFriends();
@@ -65,71 +136,60 @@ const Friends : React.FC<FriendProps> = ({ onChatSelect }) => {
     await removeFriend(userId);
     await fetchFriends();
     await fetchOnlineFriends();
+    await fetchChatsSummary();
   };
 
   const handleMessage = async (userId: number) => {
     try {
-      console.log('Attempting to message user:', userId);
-      console.log('Current chats:', chats);
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const existingChat = chats.find(chat => {
+        if (!Array.isArray(chat.participants) || chat.participants.length !== 2) return false;
+        const participantIds = chat.participants.map(p => p.id).sort();
+        const targetIds = [user.id, userId].sort();
+        return !chat.isGroup && participantIds[0] === targetIds[0] && participantIds[1] === targetIds[1];
+      });
       
-      // 1. Try to find an existing 1:1 chat with the user
-      const existingChat = chats.find(
-        (chat) =>
-          Array.isArray(chat.participants) &&
-          chat.participants.length === 2 &&
-          chat.participants.some((participant) => participant.id === userId)
-      );
-
       if (existingChat) {
-        console.log('Found existing chat:', existingChat);
-        // 2. If found, just select the chat
-        onChatSelect(existingChat.id.toString());
-      } else {
-        console.log('Creating new chat with user:', userId);
-        // 3. Create a new chat and get the returned chat directly
-        const newChat = await createChat([userId], undefined, false);
-
-        if (newChat) {
-          console.log('Created new chat directly:', newChat);
-          onChatSelect(Number(newChat.id).toString());
-        } else {
-          console.log('Failed to create chat, trying alternative approach...');
-          // Fallback: Fetch updated chat list and find the created one
-          await fetchChatsSummary();
-          
-          // Add a small delay to ensure state is updated
-          setTimeout(() => {
-            const updatedChats = useChatStore.getState().chats;
-            console.log('Updated chats after creation:', updatedChats);
-
-            const createdChat = updatedChats.find(
-              (chat) =>
-                Array.isArray(chat.participants) &&
-                chat.participants.length === 2 &&
-                chat.participants.some((participant) => participant.id === userId)
-            );
-
-            if (createdChat) {
-              console.log('Found created chat after refetch:', createdChat);
-              onChatSelect(createdChat.id.toString());
-            } else {
-              console.error('Still failed to find created chat');
-              console.log('Available chats:', updatedChats);
-              console.log('Looking for participant with ID:', userId);
-              
-              // Debug: Log the structure of each chat
-              updatedChats.forEach((chat, index) => {
-                console.log(`Chat ${index}:`, {
-                  id: chat.id,
-                  participants: chat.participants,
-                  participantIds: chat.participants?.map(p => p.id),
-                  isGroup: chat.isGroup
-                });
-              });
-            }
-          }, 100);
-        }
+        onChatSelect(existingChat.id, existingChat);
+        return;
       }
+
+      const newChat = await createChat([userId], undefined, false);
+      if (newChat) {
+        const normalizedChat = {
+          ...newChat,
+          participants: (newChat.participants || []).map((p: any) => ({
+            id: p.id,
+            name: p.name ?? p.firstname ?? p.lastname ?? '',
+          })),
+          lastMessage: newChat.lastMessage ?? undefined,
+          lastMessageAt: newChat.lastMessageAt ?? undefined,
+        };
+        onChatSelect(Number(normalizedChat.id), normalizedChat);
+        return;
+      }
+      
+      await fetchChatsSummary();
+      setTimeout(() => {
+        const updatedChats = useChatStore.getState().chats || [];
+        const createdChat = updatedChats.find(chat =>
+          Array.isArray(chat.participants) && chat.participants.some(p => p?.id === userId)
+        );
+        if (createdChat) {
+          const normalizedCreatedChat = {
+            ...createdChat,
+            participants: createdChat.participants.map((p: any) => ({
+              id: p.id,
+              name: p.name ?? p.firstname ?? p.lastname ?? '',
+            })),
+            lastMessage: createdChat.lastMessage ?? undefined,
+            lastMessageAt: createdChat.lastMessageAt ?? undefined,
+          };
+          onChatSelect(normalizedCreatedChat.id, normalizedCreatedChat);
+        }
+      }, 100);
+
     } catch (error) {
       console.error('Error in handleMessage:', error);
     }
@@ -160,11 +220,14 @@ const Friends : React.FC<FriendProps> = ({ onChatSelect }) => {
             {filteredUsers.length ? (
               filteredUsers.map(user => {
                 const isFriend = friends.some(f => f.id === user.id);
+                const userStatus = userStatuses[user.id] || 'offline'; // Get status from state
+              console.log(`User ID: ${user.id}, Status: ${userStatus}`); // Debugging log
                 return (
                   <FriendCard
                     isFriend={isFriend}
                     key={user.id}
                     user={user}
+                    status={userStatus} // Pass the fetched status
                     onMessage={isFriend ? () => handleMessage(user.id) : undefined}
                     onAdd={!isFriend ? () => handleAddFriend(user.id) : undefined}
                     onRemove={isFriend ? () => handleRemoveFriend(user.id) : undefined}

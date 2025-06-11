@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 
 const ProfileDetails = () => {
-  const { getProfile, user,  updateProfile, isLoading, error } = useProfileStore();
+  const { getProfile, user,  updateProfile, isLoading} = useProfileStore();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -103,9 +103,10 @@ useEffect(() => {
             placeholder="Enter your email"
           />
         </div>
- <button
-    
-          disabled={isLoading}
+        <button
+        type="button"
+           onClick={()=> router.push('/change-password')}
+        
           className="w-full flex items-center justify-center gap-2 bg-gradient-purple text-primary py-2 px-6 rounded-lg font-semibold hover:translate-y-[-2px] hover:shadow-lg transition disabled:opacity-50"
         >
          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -114,7 +115,7 @@ useEffect(() => {
          Change password 
         </button>
         <button
-        onClick={()=> router.push('/withNavpages/change-password')}
+ 
           type="submit"
           disabled={isLoading}
           className="w-full mt-2 flex items-center justify-center gap-2 bg-gradient-purple text-primary py-2 px-6 rounded-lg font-semibold hover:translate-y-[-2px] hover:shadow-lg transition disabled:opacity-50"

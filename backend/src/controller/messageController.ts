@@ -51,8 +51,6 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
       .where(inArray(chats.id, chatIds));
 
     // Step 3: Fetch last message per chat
-    // We fetch the last message by chatId using a subquery or window function — simplified with raw SQL might be better,
-    // but here is a knex-like approach (adjust if using your ORM):
     const lastMessages = await db
       .select({
         chatId: messages.chatId,
@@ -65,42 +63,42 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
 
     // Reduce lastMessages to get only the last message per chatId
     const lastMessageMap = new Map<number, { content: string; createdAt: Date }>();
-  for (const msg of lastMessages) {
-  if (!lastMessageMap.has(msg.chatId) && msg.createdAt) {
-    lastMessageMap.set(msg.chatId, { content: msg.content, createdAt: msg.createdAt });
-  }
-}
-    // Step 4: For 1-on-1 chats, find the other user name
-    // Fetch all userChats for these chats, so we can find the other user for each chat
+    for (const msg of lastMessages) {
+      if (!lastMessageMap.has(msg.chatId) && msg.createdAt) {
+        lastMessageMap.set(msg.chatId, { content: msg.content, createdAt: msg.createdAt });
+      }
+    }
+
+    // Step 4: Fetch all userChats for these chats, including user names
     const allUserChats = await db
       .select({
         chatId: userChats.chatId,
         userId: userChats.userId,
-           userName: sql`${users.firstname} || ' ' || ${users.lastname}`.as("userName"),
+        userName: sql`${users.firstname} || ' ' || ${users.lastname}`.as("userName"),
       })
       .from(userChats)
       .innerJoin(users, eq(userChats.userId, users.id))
       .where(inArray(userChats.chatId, chatIds));
 
     // Group users by chatId
-    const chatUsersMap = new Map<number, { userId: number; userName: string }[]>();
+    const chatUsersMap = new Map<number, { userId: number; firstname: string }[]>();
     for (const uc of allUserChats) {
       if (!chatUsersMap.has(uc.chatId)) {
         chatUsersMap.set(uc.chatId, []);
       }
-// When pushing to chatUsersMap, cast uc.userName to string
-chatUsersMap.get(uc.chatId)!.push({ userId: uc.userId, userName: uc.userName as string });
+      chatUsersMap.get(uc.chatId)!.push({ userId: uc.userId, firstname: uc.userName as string });
     }
 
-    // Step 5: Construct final array with chat info, last message, and the name for 1-on-1
+    // Step 5: Construct final array with chat info, last message, and all participants
     const chatsSummary = chatsDetails.map((chat) => {
       let displayName = chat.name; // for groups
 
-      if (!chat.isGroup) {
+      const participants = chatUsersMap.get(chat.id) || [];
+
+      if (!chat.isGroup && participants.length > 0) {
         // For 1-on-1, find the other user
-        const participants = chatUsersMap.get(chat.id) || [];
         const otherParticipant = participants.find((p) => p.userId !== userId);
-        displayName = otherParticipant ? otherParticipant.userName : 'Unknown';
+        displayName = otherParticipant ? otherParticipant.firstname : 'Unknown';
       }
 
       const lastMessage = lastMessageMap.get(chat.id);
@@ -109,18 +107,19 @@ chatUsersMap.get(uc.chatId)!.push({ userId: uc.userId, userName: uc.userName as 
         id: chat.id,
         name: displayName,
         isGroup: chat.isGroup,
+        participants: participants.map(p => ({ id: p.userId, name: p.firstname})), // Include all participants!
         lastMessage: lastMessage ? lastMessage.content : null,
         lastMessageAt: lastMessage ? lastMessage.createdAt : null,
       };
     });
 
     // Sort by lastMessageAt descending (most recent first)
-chatsSummary.sort((a, b) => {
-  if (a.lastMessageAt === null && b.lastMessageAt === null) return 0;
-  if (a.lastMessageAt === null) return 1;
-  if (b.lastMessageAt === null) return -1;
-  return b.lastMessageAt.getTime() - a.lastMessageAt.getTime();
-});
+    chatsSummary.sort((a, b) => {
+      if (a.lastMessageAt === null && b.lastMessageAt === null) return 0;
+      if (a.lastMessageAt === null) return 1;
+      if (b.lastMessageAt === null) return -1;
+      return b.lastMessageAt.getTime() - a.lastMessageAt.getTime();
+    });
 
     return res.status(200).json({ chats: chatsSummary });
   } catch (error) {
@@ -148,6 +147,7 @@ export const getMessage = async (req: Request, res: Response): Promise<any> => {
         chatId: messages.chatId,
         senderId: messages.senderId,
         content: messages.content,
+        contentType: messages.type,
         createdAt: messages.createdAt
       })
       .from(messages)
@@ -179,26 +179,57 @@ export const getMessage = async (req: Request, res: Response): Promise<any> => {
 
 // Create a new chat
 export const createChat = async (req: Request, res: Response) => {
-  const userId = Number(req.user?.id);
-  const { participantIds, name, isGroup } = req.body;
+  const currentUserId = Number(req.user?.id);
+  let { participantIds, name, isGroup } = req.body;
 
-  if (!userId || !participantIds || !Array.isArray(participantIds) || participantIds.length === 0) {
-    res.status(400).json({ error: 'Missing participants' });
-    return;
+  if (!currentUserId) {
+   res.status(401).json({ error: 'Unauthorized' });
+     return
   }
 
-  // Ensure current user is part of participants
-  if (!participantIds.includes(userId)) participantIds.push(userId);
+  if (!Array.isArray(participantIds) || participantIds.length === 0) {
+     res.status(400).json({ error: 'participantIds must be a non-empty array' });
+    return
+  }
+
+  // Ensure current user is included
+  if (!participantIds.includes(currentUserId)) {
+    participantIds.push(currentUserId);
+  }
+
+  const uniqueParticipantIds = [...new Set(participantIds)];
+  const participantCount = uniqueParticipantIds.length;
+
+  // Validate inputs
+  if (!isGroup && participantCount !== 2) {
+    res.status(400).json({ error: '1-on-1 chat must have exactly one other participant' });
+      return
+  }
+
+  if (isGroup && participantCount < 3) {
+     res.status(400).json({ error: 'Group chat must have at least 2 other participants' });
+      return
+  }
+
+  if (!isGroup && name) {
+     res.status(400).json({ error: '1-on-1 chats should not have a name' });
+      return
+  }
+
+  if (isGroup && !name) {
+     res.status(400).json({ error: 'Group chats must have a name' });
+      return
+  }
+
+  const participantsSorted = [...uniqueParticipantIds].sort();
 
   try {
-    const participantsSorted = [...participantIds].sort();
-
-    if (!isGroup && participantIds.length === 2) {
-      // ✅ Check for existing 1-on-1 chat
+    // ✅ Check for existing 1-on-1 chat
+    if (!isGroup) {
       const userChatsList = await db
         .select()
         .from(userChats)
-        .where(eq(userChats.userId, userId));
+        .where(eq(userChats.userId, currentUserId));
 
       const userChatIds = userChatsList.map((uc) => uc.chatId);
 
@@ -221,20 +252,24 @@ export const createChat = async (req: Request, res: Response) => {
           chatUserIds.length === participantsSorted.length &&
           chatUserIds.every((val, idx) => val === participantsSorted[idx])
         ) {
-          res.status(200).json({ chat });
-          return;
+             const participants = await db
+            .select()
+            .from(users)
+            .where(inArray(users.id, chatUserIds));
+           res.status(200).json({ chat: { ...chat, participants } });
+             return
         }
       }
     }
 
-    if (isGroup && name) {
-      // ✅ Check for existing group chat with same name & same participants
-      const possibleGroupChats = await db
+    // ✅ Check for existing group chat with same name and same users
+    if (isGroup) {
+      const existingGroupChats = await db
         .select()
         .from(chats)
         .where(and(eq(chats.isGroup, true), eq(chats.name, name)));
 
-      for (const groupChat of possibleGroupChats) {
+      for (const groupChat of existingGroupChats) {
         const chatUsers = await db
           .select()
           .from(userChats)
@@ -246,8 +281,8 @@ export const createChat = async (req: Request, res: Response) => {
           chatUserIds.length === participantsSorted.length &&
           chatUserIds.every((val, idx) => val === participantsSorted[idx])
         ) {
-          res.status(200).json({ chat: groupChat });
-          return;
+      res.status(200).json({ chat: groupChat });
+        return
         }
       }
     }
@@ -261,25 +296,32 @@ export const createChat = async (req: Request, res: Response) => {
       })
       .returning();
 
-    // ✅ Create user-chat relations
-    const userChatEntries = participantIds.map((userId) => ({
+    // ✅ Create user-chat links
+    const userChatEntries = uniqueParticipantIds.map((userId) => ({
       chatId: newChat.id,
       userId,
     }));
 
     await db.insert(userChats).values(userChatEntries);
 
-    // ✅ Emit to socket.io clients
-    participantIds.forEach((id) => {
+     const participants = await db
+      .select()
+      .from(users)
+      .where(inArray(users.id, uniqueParticipantIds));
+
+
+    // ✅ Emit via socket.io
+    uniqueParticipantIds.forEach((id) => {
       io.to(`user_${id}`).emit('chat_created', { chat: newChat });
     });
 
-    res.status(201).json({ chat: newChat });
+  res.status(201).json({ chat: { ...newChat, participants } });
   } catch (error) {
     console.error('Create chat error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 // Send a message 
@@ -344,26 +386,39 @@ export const sendMessage = async (req: Request, res: Response) => {
 };
 
 
-// delete a message for a user
-export const deleteMessageForUser = async (req: Request, res: Response) => {
+
+export const deleteMessageForEveryone = async (req: Request, res: Response) => {
   const userId = Number(req.user?.id);
   const messageId = Number(req.params.messageId);
 
   if (!userId || !messageId) {
-  res.status(400).json({ error: 'Missing user or message ID' });
-    return
+    res.status(400).json({ error: 'Missing user or message ID' });
+    return;
   }
 
   try {
-    await db.insert(messageDeletes).values({ messageId, userId });
-    io.to(`user_${userId}`).emit('message_hidden', { messageId });
+    // Optionally: Check if the user is the sender of the message or a chat admin
+    const [msg] = await db.select().from(messages).where(eq(messages.id, messageId));
+    if (!msg) {
+      res.status(404).json({ error: 'Message not found' });
+      return;
+    }
+    // If you want only the sender to be able to delete for everyone:
+    if (msg.senderId !== userId) {
+      res.status(403).json({ error: 'Only the sender can delete this message for everyone' });
+      return;
+    }
 
-   res.status(200).json({ message: 'Message hidden for user' });
-     return
+    // Delete the message for all users
+    await db.delete(messages).where(eq(messages.id, messageId));
+
+    // Notify all chat participants (using socket.io)
+    io.to(`chat_${msg.chatId}`).emit('message_deleted_for_everyone', { messageId });
+
+    res.status(200).json({ message: 'Message deleted for everyone' });
   } catch (error) {
-    console.error('Delete message error:', error);
- res.status(500).json({ error: 'Internal server error' });
-   return
+    console.error('Delete message for everyone error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
