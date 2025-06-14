@@ -35,23 +35,38 @@ export const useAuthStore = create<AuthState>()(
     isLoading: false,
     error: null,
 
-    getSession: async () => {
-  try {
-    const res = await axios.get("http://localhost:4000/login/user", {
-      withCredentials: true,
-    });
-    const user = res.data.user;
-    set({
-      user,
-      isAuthenticated: user?.verified ?? true,
-      isLoading: false,
-      error: null,
-    });
-  } catch (err: any) {
-    set({ user: null, isAuthenticated: false, error: "Session expired" });
-  }
-},
-
+getSession: async () => {
+      try {
+        const res = await axios.get("http://localhost:4000/login/user", {
+          withCredentials: true,
+        });
+        const user = res.data.user;
+        set({
+          user,
+          isAuthenticated: user?.verified ?? true,
+          isLoading: false,
+          error: null,
+        });
+      } catch (err: any) {
+        // Try to refresh token
+        try {
+          await axios.post("/login/refresh", {}, { withCredentials: true });
+          // Retry session fetch after refreshing token
+          const res = await axios.get("/login/user", {
+            withCredentials: true,
+          });
+          const user = res.data.user;
+          set({
+            user,
+            isAuthenticated: user?.verified ?? true,
+            isLoading: false,
+            error: null,
+          });
+        } catch (refreshError) {
+          set({ user: null, isAuthenticated: false, error: "Session expired" });
+        }
+      }
+    },
     login: async ({ email, password }) => {
       set({ isLoading: true, error: null });
       try {

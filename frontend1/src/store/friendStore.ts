@@ -71,6 +71,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       const res = await axios.get('/friend/online');
       // Online friends are just IDs
       set({ onlineFriends: res.data.online, loading: false });
+  
     } catch (error: any) {
       set({ error: error.message, loading: false });
     }

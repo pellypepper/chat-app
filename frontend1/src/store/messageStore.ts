@@ -1,6 +1,6 @@
 import {create} from 'zustand';
 import axios from 'axios';
-import { normalizeChat } from '../utils/normalizeType'; // Ensure this utility exists
+
 
 axios.defaults.withCredentials = true;
 axios.defaults.baseURL = "http://localhost:4000";
@@ -74,7 +74,7 @@ fetchChatsSummary: async () => {
       }
       
       const res = await axios.get(`/message?chatId=${chatId}`);
-      console.log('Fetched messages for chatId:', chatId, res.data.messages);
+    
       set(state => ({
         messages: {
           ...state.messages,

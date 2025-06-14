@@ -5,15 +5,16 @@ import { useStoryStore } from '@/store/storyStore';
 import UploadStoryModal from './uploadStory';
 import Image from 'next/image';
 import { Eye, X, ChevronLeft } from 'lucide-react';
+import { get } from 'http';
 
 const Stories = () => {
   const {
     stories,
-    viewers,
+  
     fetchFriendStories,
     isUploadModalOpen,
     setUploadModalOpen,
-    getStoryViewers,
+
     loading,
     error,
     markViewed, 
@@ -59,6 +60,10 @@ const Stories = () => {
     if (story && story.id && !isOwnStory && isFriend) {
  
       markViewed(story.id);
+
+      
+
+      console.log('Story marked as viewed 1:', story.id);
     } else {
 
     }
@@ -74,6 +79,15 @@ const Stories = () => {
       setActiveStoryIndex(0);
     }
   }, [selectedUserStoryGroup, activeStoryIndex]);
+
+  
+  function getLastStoryPreview(userStory: typeof stories[0]) {
+    if (!userStory.stories || userStory.stories.length === 0) return null;
+    const lastStory = userStory.stories[userStory.stories.length - 1];
+    return lastStory;
+  }
+
+  
 
   useEffect(() => {
     if (!selectedUserStoryGroup) return;
@@ -115,31 +129,17 @@ const Stories = () => {
     }
   };
 
-  const handleStorySelect = (userStory: typeof stories[0]) => {
+  const handleStorySelect = async(userStory: typeof stories[0]) => {
+   await markViewed(userStory.stories[0].id); // Mark the first story as viewed
 
+ 
     setSelectedUserStoryGroup(userStory);
     setActiveStoryIndex(0);
     setProgress(0);
     setShowViewers(false); // Reset viewers modal
   };
 
-  const handleViewersToggle = () => {
-    const isOwnStory = selectedUserStoryGroup && currentUserId !== null && selectedUserStoryGroup.userId === currentUserId;
-    
-   
-    // Only show viewers if it's not the current user's story
-    if (selectedUserStoryGroup && !isOwnStory) {
-      const currentStory = selectedUserStoryGroup.stories[activeStoryIndex];
-      if (currentStory && currentStory.id) {
-        // Fetch viewers when the eye button is clicked
-       
-        getStoryViewers(currentStory.id);
-        setShowViewers(!showViewers);
-      }
-    } else {
-     
-    }
-  };
+
 
   // Check if current story belongs to the current user
   const isOwnStory = selectedUserStoryGroup && currentUserId !== null && selectedUserStoryGroup.userId === currentUserId;
@@ -166,22 +166,41 @@ const Stories = () => {
         </div>
 
         {/* Friend Stories */}
-        {stories?.map((userStory) => (
-          <div
-            key={`story-${userStory.userId}`}
-            className="flex-shrink-0 text-center cursor-pointer group"
-            onClick={() => handleStorySelect(userStory)}
-          >
-            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-0.5 mb-1 group-hover:scale-105 transition-transform duration-200">
-              <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center text-2xl">
-                👤
+      {stories?.map((userStory) => {
+          const lastStory = getLastStoryPreview(userStory);
+          return (
+            <div
+              key={`story-${userStory.userId}`}
+              className="flex-shrink-0 text-center cursor-pointer group"
+              onClick={() => handleStorySelect(userStory)}
+            >
+              <div className="w-20 h-20 rounded-full border-secondary border   p-0.5 mb-1 group-hover:scale-105 transition-transform duration-200 relative overflow-hidden">
+                {lastStory && lastStory.type === 'image' ? (
+                  <Image
+                    src={lastStory.content}
+                    alt="Preview"
+                    fill
+                    className="object-cover rounded-full"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center text-2xl relative">
+                    👤
+                    {lastStory && lastStory.type === 'text' && (
+                      <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-white/80 bg-black/60 px-2 rounded">
+                        {lastStory.content.length > 12
+                          ? lastStory.content.slice(0, 12) + '...'
+                          : lastStory.content}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
+              <p className="text-xs text-gray-400 truncate w-20 group-hover:text-gray-300 transition-colors">
+                {userStory.firstname} {userStory.lastname}
+              </p>
             </div>
-            <p className="text-xs text-gray-400 truncate w-20 group-hover:text-gray-300 transition-colors">
-              {userStory.firstname} {userStory.lastname}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Story Viewer Modal */}
@@ -277,13 +296,7 @@ const Stories = () => {
             {!isOwnStory && (
               <div className="absolute bottom-4 left-4 right-4 z-10">
                 <div className="flex items-center justify-between">
-                  <button
-                    onClick={handleViewersToggle}
-                    className="flex items-center gap-2 text-white/80 hover:text-white px-3 py-2 rounded-full hover:bg-white/10 transition-all"
-                  >
-                    <Eye size={16} />
-                    <span className="text-sm">{viewers?.length || 0}</span>
-                  </button>
+               
                   
                   <div className="flex gap-2">
                     <button
@@ -299,55 +312,9 @@ const Stories = () => {
             )}
           </div>
 
-          {/* Story Viewers Modal - Only show for friend stories */}
-          {showViewers && !isOwnStory && viewers && viewers.length > 0 && (
-            <div className="absolute inset-0 bg-black/90 z-20 flex items-end">
-              <div className="w-full max-w-md mx-auto bg-gray-900 rounded-t-3xl p-6 max-h-96 overflow-hidden">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-semibold">Viewed by {viewers.length}</h3>
-                  <button
-                    onClick={() => setShowViewers(false)}
-                    className="text-white/70 hover:text-white p-1"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-                
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {viewers.map((viewer) => (
-                    <div key={viewer.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-lg">
-                          {viewer.firstname?.[0]?.toUpperCase()}{viewer.lastname?.[0]?.toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-white font-medium text-sm">{viewer.firstname} {viewer.lastname}</p>
-                          <p className="text-gray-400 text-xs">
-                            {new Date(viewer.viewedAt).toLocaleString([], { 
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+       
 
-          {/* Debug Panel - Remove this in production */}
-          <div className="absolute top-20 right-4 bg-red-900/80 text-white p-2 text-xs rounded max-w-xs">
-            <p>Debug Info:</p>
-            <p>isOwnStory: {isOwnStory ? 'true' : 'false'}</p>
-            <p>showViewers: {showViewers ? 'true' : 'false'}</p>
-            <p>viewers: {viewers?.length || 'null/undefined'}</p>
-            <p>currentUserId: {currentUserId}</p>
-            <p>storyUserId: {selectedUserStoryGroup?.userId}</p>
-          </div>
+   
         </div>
       )}
 

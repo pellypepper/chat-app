@@ -41,6 +41,7 @@ interface StoryStore {
   uploadStory: (data: FormData) => Promise<void>;
   markViewed: (storyId: number) => Promise<void>;
   getStoryViewers: (storyId: number) => Promise<void>;
+  deleteStory: (storyId: number) => Promise<void>;
 }
 
 export const useStoryStore = create<StoryStore>((set) => ({
@@ -71,7 +72,7 @@ export const useStoryStore = create<StoryStore>((set) => ({
     try {
       const res = await axios.get('/story/');
       set({ myStoryGroup: res.data.userStories, loading: false });
-      console.log('Fetched my stories:', res.data.userStories);
+      
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to fetch your stories';
       set({ error: message, loading: false });
@@ -100,19 +101,19 @@ export const useStoryStore = create<StoryStore>((set) => ({
       console.error('Failed to mark as viewed', error);
     }
   },
-
-  getStoryViewers: async (storyId: number) => {
-    set({ loading: true, error: null });
-    try {
-      const res = await axios.get(`/story/view/${storyId}`);
-           console.log(res.data.viewers, "tesy")
-      set({ viewers: res.data.viewers, loading: false });
- 
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch viewers';
-      set({ error: message, loading: false });
-    }
-  },
+getStoryViewers: async (storyId: number) => {
+  set({ loading: true, error: null });
+  try {
+    const res = await axios.get(`/story/view/${storyId}`);
+    const viewers = Array.isArray(res.data.viewers) ? res.data.viewers : [];
+    set({ viewers, loading: false });
+    return viewers; // <--- This is important!
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch viewers';
+    set({ error: message, loading: false, viewers: [] });
+    return []; // <--- Always return an array
+  }
+},
    deleteStory: async (storyId: number) => {
     set({ loading: true, error: null });
     try {

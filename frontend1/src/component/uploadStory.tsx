@@ -9,6 +9,7 @@ const UploadStoryModal = () => {
     setUploadModalOpen, 
     myStoryGroup, 
     fetchMyStories, 
+    getStoryViewers,
     loading, 
     error ,
     deleteStory 
@@ -22,9 +23,33 @@ const UploadStoryModal = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // viewersMap: { [storyId]: array-of-viewers }
+  const [viewersMap, setViewersMap] = useState<{ [storyId: number]: any[] }>({});
+  const [showViewers, setShowViewers] = useState(false);
+  const [activeStoryId, setActiveStoryId] = useState<number | null>(null);
+
   useEffect(() => {
     fetchMyStories();
   }, [fetchMyStories]);
+
+  // Fetch all viewers on stories load
+  useEffect(() => {
+    const fetchViewersForAllStories = async () => {
+      if (myStoryGroup && myStoryGroup.stories) {
+        const viewersResults: { [storyId: number]: any[] } = {};
+        await Promise.all(
+          myStoryGroup.stories.map(async (story: any) => {
+            const viewers = await getStoryViewers(story.id);
+      
+            viewersResults[story.id] = Array.isArray(viewers) ? viewers : [];
+          })
+        );
+        setViewersMap(viewersResults);
+      }
+    };
+
+    fetchViewersForAllStories();
+  }, [myStoryGroup, getStoryViewers]);
 
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
@@ -45,7 +70,6 @@ const UploadStoryModal = () => {
     try {
       await uploadStory(form);
       setUploadModalOpen(false);
-      // Reset form
       setText('');
       setFile(null);
       setPreviewUrl(null);
@@ -57,7 +81,13 @@ const UploadStoryModal = () => {
   };
 
   const handleDeleteStory = async(storyId: number) => {
-await deleteStory(storyId);
+    await deleteStory(storyId);
+    // Clean up viewersMap
+    setViewersMap((prev) => {
+      const newMap = { ...prev };
+      delete newMap[storyId];
+      return newMap;
+    });
     console.log('Delete story:', storyId);
   };
 
@@ -65,16 +95,24 @@ await deleteStory(storyId);
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     return `${Math.floor(diffInHours / 24)}d ago`;
   };
 
-  // Use myStoryGroup.stories or empty array if undefined
   const userStories = myStoryGroup?.stories || [];
-  console.log(userStories, "fir")
-  console.log(myStoryGroup, "sec")
+
+  // When user clicks "Viewers"
+  const handleShowViewers = async (storyId: number) => {
+    // Always refetch to get up-to-date viewers
+    const viewers = await getStoryViewers(storyId);
+    setViewersMap((prev) => ({
+      ...prev,
+      [storyId]: viewers || [],
+    }));
+    setActiveStoryId(storyId);
+    setShowViewers(true);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -177,10 +215,10 @@ await deleteStory(storyId);
                       )}
 
                       <div className="flex items-center gap-4 text-sm text-gray-400">
-                        <div className="flex items-center gap-1">
+                        <button onClick={() => handleShowViewers(story.id)} className="flex items-center gap-1">
                           <Eye size={14} />
-                          <span>{story.views ?? 0} views</span>
-                        </div>
+                          <span>{viewersMap[story.id]?.length ?? 0} views</span>
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -308,10 +346,54 @@ await deleteStory(storyId);
             </div>
           )}
         </div>
-</div>
+
+        {/* Story Viewers Modal */}
+        {showViewers && activeStoryId !== null && (
+          <div className="absolute inset-0 bg-black/90 z-20 flex items-end">
+            <div className="w-full max-w-md mx-auto bg-gray-900 rounded-t-3xl p-6 max-h-96 overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-semibold">
+                  Viewed by {viewersMap[activeStoryId]?.length ?? 0}
+                </h3>
+                <button
+                  onClick={() => setShowViewers(false)}
+                  className="text-white/70 hover:text-white p-1"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {(viewersMap[activeStoryId] || []).map((viewer) => (
+                  <div key={viewer.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-lg">
+                        {viewer.firstname?.[0]?.toUpperCase()}{viewer.lastname?.[0]?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium text-sm">{viewer.firstname} {viewer.lastname}</p>
+                        <p className="text-gray-400 text-xs">
+                          {new Date(viewer.viewedAt).toLocaleString([], { 
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {(viewersMap[activeStoryId] || []).length === 0 && (
+                  <div className="text-center text-gray-400">No viewers yet</div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
-
 
 export default UploadStoryModal;

@@ -127,6 +127,25 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   }
 };
 
+
+export const refreshAccessToken = (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid refresh token' });
+  }
+
+  // You can add additional checks here, e.g., check if user still exists/is active
+
+  const accessToken = generateAccessToken({ id: user.id, email: user.email });
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 15 * 60 * 1000
+  });
+  return res.status(200).json({ accessToken });
+}
+
 // Logout 
 export const logout = (req: Request, res: Response) => {
   res.clearCookie('accessToken');

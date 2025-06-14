@@ -334,7 +334,7 @@ export const sendMessage = async (req: Request, res: Response) => {
     return;
   }
 
-  // Ensure at least content or image is provided
+  //check if text or file  exists
   if (!content && !req.file) {
     res.status(400).json({ error: "Either content or image file must be provided" });
     return;
@@ -356,7 +356,7 @@ export const sendMessage = async (req: Request, res: Response) => {
     let messageType = 'text';
 
     if (req.file) {
-      messageContent = await compressAndUpload(req.file); // returns public URL string
+      messageContent = await compressAndUpload(req.file); 
       messageType = 'image';
     }
 
@@ -371,8 +371,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       })
       .returning();
 
-    // Emit to socket.io clients if needed
-    // Inside try block, after inserting the message:
+    // Emit to socket.io clients
    io.to(`chat_${chatId}`).emit('new_message', {
     message: newMessage,
     });
@@ -397,13 +396,13 @@ export const deleteMessageForEveryone = async (req: Request, res: Response) => {
   }
 
   try {
-    // Optionally: Check if the user is the sender of the message or a chat admin
+  // check if the user is the sender of the message
     const [msg] = await db.select().from(messages).where(eq(messages.id, messageId));
     if (!msg) {
       res.status(404).json({ error: 'Message not found' });
       return;
     }
-    // If you want only the sender to be able to delete for everyone:
+    // delete message if the user is the sender
     if (msg.senderId !== userId) {
       res.status(403).json({ error: 'Only the sender can delete this message for everyone' });
       return;

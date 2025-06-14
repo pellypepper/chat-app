@@ -58,7 +58,7 @@ export const uploadStory = async (req: Request, res: Response) => {
 
 
 
-// Get all stories from friends that are still active (not expired)
+// Get active stories for friends
 export const getFriendsStories = async (req: Request, res: Response) => {
   const userId = Number(req.user?.id);
   if (!userId) {
@@ -67,49 +67,31 @@ export const getFriendsStories = async (req: Request, res: Response) => {
   }
   
   try {
-    // Step 1: Get friends - Add debugging
-    // Option A: One-way friendship (current approach)
+     
+    //  Get friends 
     const friendRecords = await db
       .select({ friendId: friends.friendId })
       .from(friends)
       .where(eq(friends.userId, userId));
     
-    // Option B: If you need mutual/bidirectional friendship, use this instead:
-    /*
-    const friendRecords = await db
-      .select({ friendId: friends.friendId })
-      .from(friends)
-      .where(
-        or(
-          eq(friends.userId, userId),
-          eq(friends.friendId, userId)
-        )
-      );
+ 
     
-    // Filter out self and get unique friend IDs
-    const friendIds = [...new Set(
-      friendRecords
-        .map(f => f.userId === userId ? f.friendId : f.userId)
-        .filter(id => id !== userId)
-    )];
-    */
-    
-    console.log('Friend records:', friendRecords);
+
     
     const friendIds = friendRecords.map(f => f.friendId);
-    console.log('Friend IDs:', friendIds);
+
     
     // Check if friendIds is empty
     if (friendIds.length === 0) {
-      console.log('No friends found for user:', userId);
+
       res.status(200).json({ groupedStories: [] });
       return;
     }
     
     const now = new Date();
-    console.log('Current time:', now);
+ 
     
-    // Step 2: Get stories - Add debugging
+    //  Get stories 
     const rawStories = await db
       .select({
         id: stories.id,
@@ -132,10 +114,9 @@ export const getFriendsStories = async (req: Request, res: Response) => {
       )
       .orderBy(desc(stories.createdAt));
     
-    console.log('Raw stories found:', rawStories.length);
-    console.log('Raw stories:', rawStories);
+
     
-    // Debug: Check what stories exist for each friend (including expired ones)
+    //  Check what stories exist for each friend (including expired ones)
     for (const friendId of friendIds) {
       const friendStories = await db
         .select({
@@ -147,19 +128,18 @@ export const getFriendsStories = async (req: Request, res: Response) => {
         .from(stories)
         .where(eq(stories.userId, friendId));
       
-      console.log(`Stories for friend ${friendId}:`, friendStories);
-      console.log(`Active stories for friend ${friendId}:`, 
-        friendStories.filter(s => new Date(s.expiresAt) > now).length);
+
+
     }
     
     // Check if stories were found
     if (rawStories.length === 0) {
-      console.log('No active stories found for friends');
+
       res.status(200).json({ groupedStories: [] });
       return;
     }
     
-    // Step 3: Group by userId - Your existing logic (which looks correct)
+    //  Group by userId 
     const grouped = rawStories.reduce((acc, story) => {
       const key = story.userId;
       if (!acc[key]) {
@@ -193,16 +173,16 @@ export const getFriendsStories = async (req: Request, res: Response) => {
       }[];
     }>);
     
-    console.log('Grouped stories:', JSON.stringify(grouped, null, 2));
+
     
     const result = Object.values(grouped);
-    console.log('Final result:', JSON.stringify(result, null, 2));
+   
     
     res.status(200).json({ groupedStories: result });
     return;
     
   } catch (error) {
-    console.error('Get friends stories error:', error);
+
     res.status(500).json({ error: 'Internal server error' });
     return;
   }
@@ -220,6 +200,7 @@ export const markStoryViewed = async (req: Request, res: Response) => {
     res.status(400).json({ error: 'Missing user or story ID' });
     return;
   }
+
 
   try {
     // Check if already viewed
@@ -351,11 +332,11 @@ export const deleteStory = async (req: Request, res: Response) => {
       return;
     }
 
-    // Delete the story
-    await db.delete(stories).where(eq(stories.id, storyId));
-
-    // Optionally, delete story views associated with this story (cleanup)
+    //  delete all story views associated with this story
     await db.delete(storyViews).where(eq(storyViews.storyId, storyId));
+
+    // Then delete the story itself
+    await db.delete(stories).where(eq(stories.id, storyId));
 
     res.status(200).json({ message: 'Story deleted successfully' });
   } catch (error) {

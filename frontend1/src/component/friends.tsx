@@ -220,8 +220,8 @@ const fetchUserStatuses = useCallback(() => {
             {filteredUsers.length ? (
               filteredUsers.map(user => {
                 const isFriend = friends.some(f => f.id === user.id);
-                const userStatus = userStatuses[user.id] || 'offline'; // Get status from state
-              console.log(`User ID: ${user.id}, Status: ${userStatus}`); // Debugging log
+                const userStatus = userStatuses[user.id] || 'offline'; 
+            
                 return (
                   <FriendCard
                     isFriend={isFriend}

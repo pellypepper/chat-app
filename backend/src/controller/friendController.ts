@@ -152,7 +152,7 @@ export const removeFriend = async (req: Request, res: Response) => {
       .delete(friends)
       .where(and(eq(friends.userId, friendId), eq(friends.friendId, userId)));
 
-    // --- Remove any 1-on-1 chat between these users ---
+    
     // 1. Find all non-group chats for the user
     const userChatIds = (
       await db
@@ -279,7 +279,7 @@ export const searchFriends = async (req: Request, res: Response) => {
   }
 };
 
-// Get user status (online/offline) - FIXED VERSION
+// Get user status 
 export const getUserStatus = async (req: Request, res: Response) => {
   const userId = Number(req.params.userId);
 
@@ -288,15 +288,12 @@ export const getUserStatus = async (req: Request, res: Response) => {
     return;
   }
 
-  // Debug logging
-  console.log(`Getting status for user ${userId}`);
-  console.log('Online users:', Array.from(onlineUsers.keys()));
-  console.log('Last seen map:', Array.from(lastSeenMap.entries()));
+ 
 
   const isOnline = onlineUsers.has(userId);
   const lastSeenDate = lastSeenMap.get(userId);
 
-  console.log(`User ${userId} - isOnline: ${isOnline}, lastSeenDate:`, lastSeenDate);
+
 
   const response = {
     userId,
@@ -304,6 +301,6 @@ export const getUserStatus = async (req: Request, res: Response) => {
     lastSeen: isOnline ? null : (lastSeenDate ? lastSeenDate.toISOString() : null),
   };
 
-  console.log('Response:', response);
+
   res.status(200).json(response);
 };

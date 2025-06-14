@@ -10,7 +10,7 @@ import CreateGroup from '@/component/createGroup';
 import type { Chat } from '@/types/user';
 import { MultiRingSpinner } from '@/component/spinner';
 import { useFriendsStore } from '@/store/friendStore';
-import { allUsers } from '@/data/user';
+
 
 const Dashboard = () => {
   const [isOpen, setIsOpen] = useState(false);

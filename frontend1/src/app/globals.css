@@ -89,6 +89,10 @@ html {
   border-color: var(--color-border);
 }
 
+.border-secondary {
+  border-color: var(--color-gradient-purple);
+}
+
 .text-primary {
   color: var(--text-primary);
 }
