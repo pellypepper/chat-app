@@ -7,6 +7,23 @@ export interface User {
 
 }
 
+export type Story = {
+userId: number;
+ stories: Array<{
+    id: number,
+    content: string,
+    type: 'text' | 'image',
+    createdAt: string,
+    expiresAt: string
+  }>;
+  type: 'text' | 'image';
+  createdAt: string;
+  expiresAt: string;
+  firstname: string;
+  lastname: string;
+   
+}
+
 export interface Friend {
   id: number;
   firstname: string;

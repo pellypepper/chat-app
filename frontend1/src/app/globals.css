@@ -148,6 +148,7 @@ background-color: var(--bg-color);
 
 .scrollbar-auto-hide::-webkit-scrollbar {
   width: 6px;
+
 }
 
 .scrollbar-auto-hide {
