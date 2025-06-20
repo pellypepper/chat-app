@@ -18,7 +18,6 @@ const Dashboard = () => {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const {  isAuthenticated, getSession } = useAuthStore();
   const { chats ,  fetchChatsSummary} = useChatStore();
-  // Loading states and text stages
   const [loading, setLoading] = useState(true);
   const [loadingStage, setLoadingStage] = useState<'redirecting' | 'authenticating'>('redirecting');
  const {
@@ -68,7 +67,7 @@ const Dashboard = () => {
       
       fetchAllUsers();
       fetchFriends();
-      fetchChatsSummary(); // Add this to load existing chats
+      fetchChatsSummary(); 
       fetchOnlineFriends();
 
 
@@ -79,7 +78,7 @@ const Dashboard = () => {
   const handleClose = () => setIsOpen(false);
 
 
-
+// Handle chat selection
 const handleChatSelect = async(chatId: number, optionalChat?: Chat) => {
 
   if (optionalChat) {
@@ -90,13 +89,13 @@ const handleChatSelect = async(chatId: number, optionalChat?: Chat) => {
   const selected = chats.find(c => Number(c.id) === chatId) || null;
 
   if (!selected) {
-    console.error("No chat found with id:", chatId);
+   
     setSelectedChat(null);
     return;
   }
 
   if (!Array.isArray(selected.participants)) {
-    console.error("Chat found, but participants missing for chat id:", chatId, selected);
+  
     setSelectedChat(null);
     return;
   }
@@ -114,17 +113,19 @@ const normalizedSelected = {
 setSelectedChat(normalizedSelected);
 };
 
+// Handle group creation toggle
 const handleGroup = () => {
   setShowCreateGroup(!showCreateGroup);
 }
 
+// Handle click outside to close create group modal
 const handleClickOutside = () => {
   setShowCreateGroup(false);
 }
 
   const handleBack = () => setSelectedChat(null);
 
-  // Show spinner + staged text while loading
+  // Show spinner 
   if (loading) {
     return (
       <div className="h-screen bg-navbar-bg flex flex-col justify-center items-center gap-4 ">
@@ -132,7 +133,7 @@ const handleClickOutside = () => {
         <p className="text-lg font-semibold text-primary">
           {loadingStage === 'redirecting' ? 'redirecting...' : 'Authenticating...'}
         </p>
-        {/* Optional: Add progress bar animation here */}
+      
         <div className="w-64 h-2 bg-gray-300 rounded-full overflow-hidden mt-2">
           <div
             className={`h-full bg-gradient-to-r from-blue-400 to-purple-600 animate-progressBar`}
@@ -143,7 +144,7 @@ const handleClickOutside = () => {
     );
   }
 
-  // After loading is done, show actual dashboard
+  // Dashboard content
   return (
     <div className="h-screen overflow-hidden ">
       {/* Mobile View */}

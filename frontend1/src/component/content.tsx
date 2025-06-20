@@ -3,17 +3,13 @@
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/loginStore";
-import { MultiRingSpinner } from "./spinner";
-type ContentProps = {
-
-
-};
+type ContentProps = object;
 
 
 
 const Content: React.FC<ContentProps> = ({  }) => {
 
-  const { isLoading , error ,isAuthenticated, googleLogin} = useAuthStore();
+  const { isAuthenticated, googleLogin } = useAuthStore();
   const router = useRouter();
     
    const handleRegisterClick = () => {

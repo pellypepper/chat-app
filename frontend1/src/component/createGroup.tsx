@@ -7,12 +7,6 @@ import SuccessPopup from './successPop';
 import ErrorPopup from './errorpopup';
 import { MultiRingSpinner } from './spinner';
 
-type Friend = {
-  id: number; 
-  firstname: string;
-  lastname: string;
-  email?: string;
-};
 
 type CreateGroupProps = {
   handleClickOutside: () => void;
@@ -25,17 +19,15 @@ const CreateGroup: React.FC<CreateGroupProps> = ({
   const { createChat, chats } = useChatStore();
 
   const friendsList = friendsStoreFriends && friendsStoreFriends.length > 0 ? friendsStoreFriends : [];
-  
   const [groupName, setGroupName] = useState('');
   const [selectedFriends, setSelectedFriends] = useState<number[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Spinner and popup states
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  
   const handleFriendToggle = (friendId: number) => {
     setSelectedFriends(prev =>
       prev.includes(friendId)
@@ -44,6 +36,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({
     );
   };
 
+  // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (groupName.trim() && selectedFriends.length > 0) {

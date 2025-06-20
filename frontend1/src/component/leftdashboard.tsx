@@ -4,7 +4,6 @@ import Stories from "./stories";
 import Messages from "./messages";
 import Friends from "./friends";
 import CreateGroupIcon from './createGroupIcon';
-
 import { useAuthStore } from '@/store/loginStore';
 import { useRouter } from 'next/navigation';
 import SuccessPopup from './successPop';
@@ -15,7 +14,7 @@ import { useChatStore } from '@/store/messageStore';
 type LeftDashboardProps = {
   onChatSelect: (chatId: number) => void;
   handleClick: () => void;
-  handleGroup?: () => void; // Optional prop for handling group creation
+  handleGroup?: () => void;
  
 };
 
@@ -25,8 +24,6 @@ const Leftdashboard: React.FC<LeftDashboardProps> = ({ handleGroup, handleClick,
   const [activeTab, setActiveTab] = useState('Messages');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
-
-
   const navItems = ['Messages', 'Friends', 'Group'];
   const router = useRouter();
   const { logout, isLoading, user, error} = useAuthStore();
@@ -34,6 +31,7 @@ const Leftdashboard: React.FC<LeftDashboardProps> = ({ handleGroup, handleClick,
  
 const { chats } = useChatStore();
 
+// Handle logout and redirect
 const handleLogout = async () => {
   try {
     await logout();
@@ -51,7 +49,7 @@ const handleLogout = async () => {
 
 
   
-
+// Handle error dismissal
   const handleErrorDismiss = () => {
     setShowError(false);
   };
@@ -106,10 +104,10 @@ const handleLogout = async () => {
                   .map((chat) => ({
                   id: Number(chat.id),
                   name: chat.name,
-                  avatar: '', // Provide a default or map accordingly, or use a valid property from Chat if available
-                  message: chat.lastMessage || '', // Provide a default or map accordingly
-                  time: chat.lastMessageAt || '', // Provide a default or map accordingly
-                  unread: 0, // Default value since unreadCount does not exist on Chat
+                  avatar: '',
+                  message: chat.lastMessage || '', 
+                  time: chat.lastMessageAt || '',
+                  unread: 0, 
                 }))}
               />
             </div>
@@ -141,10 +139,10 @@ const handleLogout = async () => {
                     .map((chat) => ({
                     id: Number(chat.id),
                     name: chat.name,
-                    avatar: '', // Provide a default or map accordingly, or use a valid property from Chat if available
-                    message: chat.lastMessage || '', // Provide a default or map accordingly
-                    time: chat.lastMessageAt || '', // Provide a default or map accordingly
-                    unread: 0, // Default value since unreadCount does not exist on Chat
+                    avatar: '', 
+                    message: chat.lastMessage || '',
+                    time: chat.lastMessageAt || '', 
+                    unread: 0,
                   }))}
                 />
               ) : (

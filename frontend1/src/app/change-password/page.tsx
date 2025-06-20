@@ -9,9 +9,8 @@ import { useRouter } from 'next/navigation';
 import SuccessPopup from '@/component/successPop';
 import ErrorPopup from '@/component/errorpopup';
 
-interface ChangePasswordProps {}
 
-export default function ChangePasswordModal({}: ChangePasswordProps) {
+export default function ChangePasswordModal() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,6 +26,7 @@ export default function ChangePasswordModal({}: ChangePasswordProps) {
   const { changePassword, isLoading } = useProfileStore();
   const router = useRouter();
 
+  // Validate form inputs
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
@@ -57,9 +57,10 @@ export default function ChangePasswordModal({}: ChangePasswordProps) {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Handle form submission
  const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  console.log('Submitting change password form');
+ 
   if (!validateForm()) return;
 
   if (currentPassword === newPassword) {
@@ -67,17 +68,16 @@ export default function ChangePasswordModal({}: ChangePasswordProps) {
     return;
   }
 
-  console.log('Form is valid, proceeding with password change');
+ 
   setIsLoadingLocal(true);
   setProgress(0);
 
   try {
-    console.log('Changing password...');
+
     await changePassword(currentPassword, newPassword);
-    console.log('Password change successful');
+
 
     // Animate the progress bar from 0 to 100 over 3 seconds
-    let step = 0;
     const duration = 3000; // 3 seconds
     const intervalTime = 30; // ms
     const totalSteps = duration / intervalTime;

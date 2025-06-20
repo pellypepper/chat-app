@@ -10,8 +10,9 @@ const lastSeenMap = new Map<number, Date>();
 export function initializeSocket(server: HTTPServer) {
   io = new Server(server, {
     cors: {
-      origin: '*',
+      origin: 'http://localhost:3000',
       methods: ['GET', 'POST'],
+          credentials: true,
     },
   });
 

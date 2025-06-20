@@ -5,10 +5,10 @@ import React, { createContext, useContext, useState } from 'react';
 type UIContextType = {
   isSigninOpen: boolean;
   isRegisterOpen: boolean;
-    isOpen?: boolean; // Optional for handling the menu toggle
+    isOpen?: boolean; 
   toggleSignin: () => void;
   toggleRegister: () => void;
-  handleClick?: () => void; // Optional for handling clicks
+  handleClick?: () => void; 
 };
 
 const UIContext = createContext<UIContextType | undefined>(undefined);

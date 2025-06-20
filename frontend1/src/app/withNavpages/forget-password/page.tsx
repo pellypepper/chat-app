@@ -17,7 +17,7 @@ export default function ForgotPassword() {
   const {forgotPassword } = useProfileStore();
   const [email, setEmail] = useState('')
 
-
+// Handle sending reset link
  const handleSendResetLink = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   try {
@@ -30,7 +30,7 @@ export default function ForgotPassword() {
   }
 };
 
-
+// Handle timeout for success/error popups
   const handleTimeout = () => {
     setShowSuccess(false);
     setShowError(false);
@@ -50,7 +50,7 @@ export default function ForgotPassword() {
         <ErrorPopup
           message="An error occurred while sending the reset link. Please try again later."
           handleTimeout={handleTimeout}
-                    handleSendResetLink={handleSendResetLink}
+          
         />
       )}
 

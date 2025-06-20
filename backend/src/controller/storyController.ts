@@ -301,7 +301,7 @@ export const getMyStories = async (req: Request, res: Response) => {
         expiresAt: story.expiresAt ?? new Date(0),
       })),
     };
-
+ console
     res.status(200).json({ userStories: grouped });
   } catch (error) {
     console.error('Get my stories error:', error);

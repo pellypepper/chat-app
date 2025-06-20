@@ -1,6 +1,6 @@
 'use client';
 
-import React from "react";
+
 
 export interface PasswordRequirement {
   id: string;
@@ -15,6 +15,7 @@ export const passwordRequirements: PasswordRequirement[] = [
   { id: 'number', text: 'One number', test: (p) => /\d/.test(p) },
   { id: 'special', text: 'One special character', test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p) }
 ];
+
 
 export function getPasswordStrength(password: string) {
   const metRequirements = passwordRequirements.filter(req => req.test(password)).length;

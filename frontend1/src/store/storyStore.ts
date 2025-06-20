@@ -71,6 +71,7 @@ export const useStoryStore = create<StoryStore>((set) => ({
     set({ loading: true, error: null });
     try {
       const res = await axios.get('/story/');
+      console.log('My stories response:', res.data);
       set({ myStoryGroup: res.data.userStories, loading: false });
       
     } catch (error: unknown) {
@@ -101,7 +102,7 @@ export const useStoryStore = create<StoryStore>((set) => ({
       console.error('Failed to mark as viewed', error);
     }
   },
-getStoryViewers: async (storyId: number) => {
+  getStoryViewers: async (storyId: number) => {
   set({ loading: true, error: null });
   try {
     const res = await axios.get(`/story/view/${storyId}`);

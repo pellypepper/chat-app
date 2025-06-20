@@ -12,18 +12,12 @@ interface Friend {
   email: string;
 }
 
-interface UserStatus {
-  userId: number;
-  status: 'online' | 'offline';
-  lastSeen: string | null;
-}
-
 interface FriendsState {
   allUsers: Friend[];
   friends: Friend[];
-  onlineFriends: number[]; // just IDs of online friends
+  onlineFriends: number[]; 
   searchResults: Friend[];
-  // userStatus and status removed, not needed for per-user status anymore
+
   loading: boolean;
   error: string | null;
 
@@ -31,7 +25,8 @@ interface FriendsState {
   fetchOnlineFriends: () => Promise<void>;
   fetchAllUsers: () => Promise<void>;
   searchFriends: (query: string) => Promise<void>;
-  getUserStatus: (userId: number) => Promise<'online' | 'offline'>; // return status directly
+  getUserStatus: (userId: number) => Promise<'online' | 'offline'>; 
+  getUserSeen: (userId: number) => Promise<{ lastSeen: string | null; status: 'online' | 'offline' }>;
   addFriend: (friendId: number) => Promise<void>;
   removeFriend: (friendId: number) => Promise<void>;
   clearSearch: () => void;
@@ -50,8 +45,9 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     try {
       const res = await axios.get('/friend/all');
       set({ allUsers: res.data.users, loading: false });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, loading: false });
     }
   },
 
@@ -60,8 +56,9 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     try {
       const res = await axios.get('/friend/list');
       set({ friends: res.data.friends, loading: false });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, loading: false });
     }
   },
 
@@ -72,8 +69,9 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       // Online friends are just IDs
       set({ onlineFriends: res.data.online, loading: false });
   
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, loading: false });
     }
   },
 
@@ -86,8 +84,9 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     try {
       const res = await axios.get(`/friend/search?query=${encodeURIComponent(query)}`);
       set({ searchResults: res.data.results, loading: false });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, loading: false });
     }
   },
     getUserSeen: async (userId: number) => {
@@ -104,12 +103,12 @@ if (isOnline) {
       lastSeen: res.data.lastSeen,
       status: res.data.status,
     };
-  } catch (error: any) {
+  } catch {
     return { lastSeen: null, status: 'offline' };
   }
 },
 
-  // FIX: getUserStatus now returns status based on onlineFriends state, not from API
+
   getUserStatus: async (userId: number) => {
     const { onlineFriends } = get();
     return onlineFriends.includes(userId) ? 'online' : 'offline';
@@ -124,8 +123,17 @@ if (isOnline) {
       await get().fetchFriends();
       await get().fetchOnlineFriends();
       set({ loading: false });
-    } catch (error: any) {
-      const message = error.response?.data?.error || error.message || 'Unknown error';
+    } catch (error: unknown) {
+      let message = 'Unknown error';
+      if (error && typeof error === 'object') {
+        type AxiosError = { response?: { data?: { error?: string } }, message?: string };
+        const err = error as AxiosError;
+        if ('response' in err && typeof err.response?.data?.error === 'string') {
+          message = err.response.data.error as string;
+        } else if ('message' in err && typeof err.message === 'string') {
+          message = err.message as string;
+        }
+      }
       set({ error: message, loading: false });
     }
   },
@@ -137,8 +145,9 @@ if (isOnline) {
       await get().fetchFriends();
       await get().fetchOnlineFriends();
       set({ loading: false });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, loading: false });
     }
   },
 

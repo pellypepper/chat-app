@@ -5,7 +5,7 @@ import s3 from '../util/s3';
 import { Upload } from "@aws-sdk/lib-storage";
 
 
-// Multer memory storage (file will be available in req.file.buffer)
+// Multer memory storage 
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
@@ -21,7 +21,7 @@ const upload = multer({
 // Compress with sharp and upload to S3
 const compressAndUpload = async (file: Express.Multer.File): Promise<string> => {
   const buffer = await sharp(file.buffer)
-    .resize({ width: 800 }) // Resize width to 800px (adjust as needed)
+    .resize({ width: 800 }) // Resize width to 800px 
     .jpeg({ quality: 70 })  // Compress to JPEG with 70% quality
     .toBuffer();
 

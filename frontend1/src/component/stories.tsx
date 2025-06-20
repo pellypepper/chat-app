@@ -4,8 +4,8 @@ import { useEffect, useState , useCallback} from 'react';
 import { useStoryStore } from '@/store/storyStore';
 import UploadStoryModal from './uploadStory';
 import Image from 'next/image';
-import { Eye, X, ChevronLeft } from 'lucide-react';
-import { get } from 'http';
+import {  X, ChevronLeft } from 'lucide-react';
+
 
 const Stories = () => {
   const {
@@ -53,10 +53,7 @@ const Stories = () => {
 
    
 
-    // Only mark as viewed if:
-    // 1. It's a valid story with an ID
-    // 2. It's NOT the current user's own story
-    // 3. It's a friend's story
+  
     if (story && story.id && !isOwnStory && isFriend) {
  
       markViewed(story.id);
@@ -69,6 +66,7 @@ const Stories = () => {
     }
   }, [selectedUserStoryGroup, activeStoryIndex, markViewed, currentUserId, stories]);
 
+  // Handle next story
   const handleNext = useCallback(() => {
     if (!selectedUserStoryGroup) return;
     const maxIndex = selectedUserStoryGroup.stories.length - 1;
@@ -80,7 +78,7 @@ const Stories = () => {
     }
   }, [selectedUserStoryGroup, activeStoryIndex]);
 
-  
+  // Get last story preview for a user
   function getLastStoryPreview(userStory: typeof stories[0]) {
     if (!userStory.stories || userStory.stories.length === 0) return null;
     const lastStory = userStory.stories[userStory.stories.length - 1];
@@ -110,6 +108,7 @@ const Stories = () => {
     setProgress(0);
   }, [activeStoryIndex]);
 
+  // Handle previous story
   const handlePrev = () => {
     if (activeStoryIndex > 0) {
       setActiveStoryIndex((prev) => prev - 1);

@@ -1,10 +1,12 @@
+"use client";
+
 import { getStatusColor } from '../utils/friendHelper';
 import { User } from '@/types/user'; 
 
 interface FriendCardProps {
   user: User;
   isFriend: boolean; 
-  status: string; // Status passed from parent
+  status: string; 
   onMessage?: (id: number) => void;
   onAdd?: (id: number) => void;
   onRemove?: (id: number) => void;

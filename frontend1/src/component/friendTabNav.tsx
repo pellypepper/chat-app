@@ -1,6 +1,4 @@
-// components/Friends/TabNavigation.tsx
-import React from 'react';
-
+"use client"
 interface TabNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;

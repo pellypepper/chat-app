@@ -12,6 +12,8 @@ router.get("/google", googleLogin);
 
 router.get('/user',  authenticateAccessToken , getCurrentUser); 
 
+router.post('/refresh', authenticateAccessToken, getCurrentUser);
+
 // Google callback
 router.get("/google/callback", googleLoginCallback);
 

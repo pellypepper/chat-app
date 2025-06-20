@@ -6,23 +6,17 @@ import SuccessPopup from '@/component/successPop';
 import  ErrorPopup  from '@/component/errorpopup';
 import { MultiRingSpinner } from '@/component/spinner';
 import { useRouter } from 'next/navigation';
-type VerifyCodeProps = {
- 
-  
-};
+type VerifyCodeProps = object;
 
 const VerifyCode: React.FC<VerifyCodeProps> = ({  }) => {
   const inputRefs = useRef<HTMLInputElement[]>([]);
   const [otp, setOtp] = useState(Array(6).fill(''));
   const [seconds, setSeconds] = useState(60);
-  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');  
   const [resendAvailable, setResendAvailable] = useState(false);
-
 const searchParams = useSearchParams();
   const tempState = searchParams.get('tempState');
   const router = useRouter();
-
   const {verifyEmail , isLoading, error} =  useAuthStore();
 
 
@@ -57,12 +51,14 @@ const searchParams = useSearchParams();
     }
   };
 
+  // Handle backspace key
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
+  // Handle verification
 const handleVerify = async () => {
   if (!tempState) return;
 
@@ -112,7 +108,7 @@ const handleVerify = async () => {
           {otp.map((digit, i) => (
             <input
               key={i}
-              ref={el => (inputRefs.current[i] = el!)}
+              ref={el => { inputRefs.current[i] = el!; }}
               type="text"
               maxLength={1}
               value={digit}

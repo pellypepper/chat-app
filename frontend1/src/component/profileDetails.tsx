@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
 import { useProfileStore } from "@/store/profileStore";
 import { useRouter } from "next/navigation";
-
-
+import { useFriendsStore } from "@/store/friendStore";
+import { useChatStore } from "@/store/messageStore";
 const ProfileDetails = () => {
   const { getProfile, user,  updateProfile, isLoading} = useProfileStore();
-
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-
+const {friends} = useFriendsStore();
   const router = useRouter();
-  
+  const { chats } = useChatStore();
 useEffect(() => {
   const fetchUser = async () => {
     await getProfile();
@@ -27,7 +26,9 @@ useEffect(() => {
   }
 }, [user]);
 
+const group = chats.filter((chat) => chat.isGroup);
 
+//  Handle profile update
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -58,11 +59,11 @@ useEffect(() => {
         <div className="text-secondary mb-2">Always learning something new 🚀</div>
         <div className="flex justify-around pt-4 border-t border-primary">
           <div className="text-center">
-            <div className="text-xl font-bold text-blue-400">142</div>
+            <div className="text-xl font-bold text-blue-400">{friends.length}</div>
             <div className="text-secondary text-sm">Friends</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-bold text-blue-400">8</div>
+            <div className="text-xl font-bold text-blue-400">{group.length}</div>
             <div className="text-secondary text-sm">Groups</div>
           </div>
         </div>

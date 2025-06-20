@@ -1,5 +1,4 @@
-// components/LoadingSpinners.tsx
-import React from 'react';
+"Use client";
 
 interface SpinnerProps {
   size?: 'sm' | 'md' | 'lg';

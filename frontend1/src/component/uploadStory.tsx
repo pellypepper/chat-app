@@ -22,8 +22,6 @@ const UploadStoryModal = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // viewersMap: { [storyId]: array-of-viewers }
   const [viewersMap, setViewersMap] = useState<{ [storyId: number]: any[] }>({});
   const [showViewers, setShowViewers] = useState(false);
   const [activeStoryId, setActiveStoryId] = useState<number | null>(null);
@@ -51,12 +49,14 @@ const UploadStoryModal = () => {
     fetchViewersForAllStories();
   }, [myStoryGroup, getStoryViewers]);
 
+  // Handle file selection
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
     const url = URL.createObjectURL(selectedFile);
     setPreviewUrl(url);
   };
 
+  // Handle submit
   const handleSubmit = async () => {
     if (type === 'text' && !text.trim()) return;
     if (type === 'image' && !file) return;
@@ -80,6 +80,7 @@ const UploadStoryModal = () => {
     }
   };
 
+  // Handle delete story
   const handleDeleteStory = async(storyId: number) => {
     await deleteStory(storyId);
     // Clean up viewersMap
@@ -108,7 +109,7 @@ const UploadStoryModal = () => {
     const viewers = await getStoryViewers(storyId);
     setViewersMap((prev) => ({
       ...prev,
-      [storyId]: viewers || [],
+      [storyId]: Array.isArray(viewers) ? viewers : [],
     }));
     setActiveStoryId(storyId);
     setShowViewers(true);

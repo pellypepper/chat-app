@@ -34,8 +34,8 @@ export const allUsers = async (req: Request, res: Response) => {
         email: users.email,
       })
       .from(users)
-     .where(not(eq(users.id, userId))) // Exclude current user
-      .orderBy(users.firstname); // Alphabetical
+     .where(not(eq(users.id, userId))) 
+      .orderBy(users.firstname); 
 
     res.status(200).json({ users: results });
     return;
@@ -153,7 +153,7 @@ export const removeFriend = async (req: Request, res: Response) => {
       .where(and(eq(friends.userId, friendId), eq(friends.friendId, userId)));
 
     
-    // 1. Find all non-group chats for the user
+    //  Find all non-group chats for the user
     const userChatIds = (
       await db
         .select({ chatId: userChats.chatId })
@@ -162,7 +162,7 @@ export const removeFriend = async (req: Request, res: Response) => {
     ).map(row => row.chatId);
 
     if (userChatIds.length > 0) {
-      // 2. Of those, find a non-group chat that includes friendId and only these two users
+      // find a non-group chat that includes friendId and only these two users
       const possibleChats = await db
         .select()
         .from(chats)
@@ -195,7 +195,7 @@ export const removeFriend = async (req: Request, res: Response) => {
         }
       }
     }
-    // --------------------------------------------------
+
 
     res.status(200).json({ message: 'Friend removed and chat (if any) deleted' });
     return;

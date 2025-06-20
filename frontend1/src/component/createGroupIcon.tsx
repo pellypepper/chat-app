@@ -1,4 +1,4 @@
-import React from 'react';
+'use client';
 
 const CreateGroupIcon = ({ size = 24, color = 'currentColor',  }) => (
   <svg

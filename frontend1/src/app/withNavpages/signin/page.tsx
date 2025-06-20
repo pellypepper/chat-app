@@ -7,25 +7,18 @@ import SuccessPopup from '@/component/successPop';
 import ErrorPopup from '@/component/errorpopup';
 import { MultiRingSpinner } from '@/component/spinner';
 
-type SigninProps = {
-
- 
-};
+type SigninProps = object;
 
 const Signin: React.FC<SigninProps> = ({}) => {
   const router = useRouter();
-
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  // Local state to track success for showing popup
+  const [password, setPassword] = useState('')
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
-
-  // Destructure auth store
   const { login,  isAuthenticated, isLoading, error } = useAuthStore();
+  const [formError, setFormError] = useState<string | null>(null);
 
-  // When authentication changes, handle side effects
+
   useEffect(() => {
     if (isAuthenticated) {
       setShowSuccess(true);
@@ -43,16 +36,16 @@ const Signin: React.FC<SigninProps> = ({}) => {
   // Handle login form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!email || !password) {
-      alert('Please fill in all fields');
+      setFormError('Please enter both email and password.');
+      setShowError(true);
       return;
     }
 
+    setFormError(null);
+    await login({ email, password });
     await login({ email, password });
   };
-
-  
 
   // When error popup dismissed
   const handleErrorDismiss = () => {
@@ -161,17 +154,15 @@ const Signin: React.FC<SigninProps> = ({}) => {
       {showSuccess && (
         <SuccessPopup
           message="Login successful! Redirecting to your dashboard."
-         handleTimeout={() => {}} 
-           showContinueButton={false}
+          handleTimeout={() => {}} 
+          showContinueButton={false}
           url="/dashboard"
           tempState={null}
         />
       )}
-
-      {/* Error Popup */}
       {showError && (
         <ErrorPopup
-          message={error || 'Login failed. Please try again.'}
+          message={formError || error || 'Login failed. Please try again.'}
           handleTimeout={handleErrorDismiss}
         />
       )}

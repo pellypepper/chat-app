@@ -1,4 +1,5 @@
-import React from 'react'
+"use client";
+
 import { Conversations } from '../types/user';
 type MessagesProps = {
    

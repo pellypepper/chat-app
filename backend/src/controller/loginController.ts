@@ -4,7 +4,21 @@ import geoip from 'geoip-lite';
 import passport from 'passport';
 import { generateAccessToken, generateRefreshToken } from '../middleware/auth';
 import jwt from 'jsonwebtoken';
-import {findUserById} from '../model/userModel';
+import { findUserById } from '../model/userModel'; 
+
+
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+      email: string;
+
+    }
+    interface Request {
+      user?: User;
+    }
+  }
+}
 
 // Local login 
 export const login = (req: Request, res: Response, next: NextFunction) => {
@@ -33,7 +47,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
     }
 
     // Generate tokens
-    const accessToken = generateAccessToken({ id: user.id, email: user.email });
+    const accessToken = generateAccessToken({ id: user.id, email: (user as any).email });
     const refreshToken = generateRefreshToken({ id: user.id, email: user.email });
 
    // Send cookies
@@ -134,7 +148,7 @@ export const refreshAccessToken = (req: Request, res: Response) => {
     return res.status(401).json({ message: 'Invalid refresh token' });
   }
 
-  // You can add additional checks here, e.g., check if user still exists/is active
+  
 
   const accessToken = generateAccessToken({ id: user.id, email: user.email });
   res.cookie('accessToken', accessToken, {

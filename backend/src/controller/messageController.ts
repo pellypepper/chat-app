@@ -26,7 +26,7 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
   }
 
   try {
-    // Step 1: Get all chats user participates in
+    //  Get all chats user participates in
     const userChatsList = await db
       .select({
         chatId: userChats.chatId,
@@ -40,7 +40,7 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
       return res.status(200).json({ chats: [] });
     }
 
-    // Step 2: Fetch chat details
+    //  Fetch chat details
     const chatsDetails = await db
       .select({
         id: chats.id,
@@ -50,7 +50,7 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
       .from(chats)
       .where(inArray(chats.id, chatIds));
 
-    // Step 3: Fetch last message per chat
+    //  Fetch last message per chat
     const lastMessages = await db
       .select({
         chatId: messages.chatId,
@@ -69,7 +69,7 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
       }
     }
 
-    // Step 4: Fetch all userChats for these chats, including user names
+    //  Fetch all userChats for these chats, including user names
     const allUserChats = await db
       .select({
         chatId: userChats.chatId,
@@ -89,7 +89,7 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
       chatUsersMap.get(uc.chatId)!.push({ userId: uc.userId, firstname: uc.userName as string });
     }
 
-    // Step 5: Construct final array with chat info, last message, and all participants
+    //  Construct final array with chat info, last message, and all participants
     const chatsSummary = chatsDetails.map((chat) => {
       let displayName = chat.name; // for groups
 

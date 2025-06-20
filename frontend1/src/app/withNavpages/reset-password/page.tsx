@@ -24,13 +24,13 @@ export default function ResetPasswordModal({ onClose, onSuccess }: ResetPassword
   const [progress, setProgress] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
-
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const email = searchParams.get('email') || '';
   const router = useRouter();
   const { resetPassword } = useProfileStore();
 
+  // Validate password requirements
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
     const metRequirements = passwordRequirements.filter(req => req.test(newPassword)).length;
@@ -51,6 +51,7 @@ export default function ResetPasswordModal({ onClose, onSuccess }: ResetPassword
     return Object.keys(newErrors).length === 0;
   };
 
+  // Handle modal close
   const handleClose = () => {
     setNewPassword('');
     setConfirmPassword('');
@@ -64,6 +65,7 @@ export default function ResetPasswordModal({ onClose, onSuccess }: ResetPassword
     onClose();
   };
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -72,7 +74,7 @@ export default function ResetPasswordModal({ onClose, onSuccess }: ResetPassword
     setProgress(0);
 
     try {
-      // First, complete the password reset
+
       await resetPassword({ token, newPassword, email });
       setIsLoading(false);
     setIsSuccess(true);
@@ -82,23 +84,12 @@ export default function ResetPasswordModal({ onClose, onSuccess }: ResetPassword
               setIsSuccess(true);
        
                  
-              // Use router.push for navigation
+        
               router.push('/withNavpages/signin');
                      handleClose();
                      
             }, 3000);
-      // Then start the progress animation
-      // const progressInterval = setInterval(() => {
-      //   setProgress(prev => {
-      //     if (prev >= 100) {
-      //       clearInterval(progressInterval);
-      //       // Use setTimeout to ensure the progress bar completes visually
-           
-      //       return 100;
-      //     }
-      //     return prev + 20;
-      //   });
-      // }, 300);
+     
 
     } catch (error) {
       console.error('Password reset error:', error);
@@ -109,6 +100,7 @@ export default function ResetPasswordModal({ onClose, onSuccess }: ResetPassword
     }
   };
 
+  // Validate confirm password on change
   useEffect(() => {
     if (confirmPassword && newPassword !== confirmPassword) {
       setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));

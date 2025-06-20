@@ -6,14 +6,12 @@ import { useAuthStore } from '@/store/loginStore';
 import { useFriendsStore } from '@/store/friendStore';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import Image from 'next/image';
-import io, { Socket } from "socket.io-client";
+import {useSocketContext} from '@/hooks/useSocket';
 
 type RightdashboardProps = {
   onBack: () => void;
   chat: Chat | null;
 };
-
-const SOCKET_URL = "http://localhost:4000";
 
 const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
   const {
@@ -29,6 +27,8 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
   const currentUserId = user?.id;
 
   const { onlineFriends, getUserSeen } = useFriendsStore();
+ const { socket, socketConnected } = useSocketContext();
+  
 
   const chatMessages = useMemo(
     () => (chat ? messages[chat.id] || [] : []),
@@ -40,53 +40,16 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
   const [input, setInput] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
-
-  // Last seen logic
   const [lastSeen, setLastSeen] = useState<string | null>(null);
-
-  // Socket state for reactivity (for fallback, not used for online indicator anymore)
-  const [socketConnected, setSocketConnected] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
 
   // Determine other user for 1:1 chat
   const otherUserId = (chat && chat.participants && chat.participants.length === 2 && currentUserId)
     ? chat.participants.find(p => p.id !== currentUserId)?.id
     : null;
 
-  // Set up socket connection and listeners
-  useEffect(() => {
-    if (!currentUserId) return;
-
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
-    }
-
-    socketRef.current = io(SOCKET_URL, {
-      query: { userId: currentUserId.toString() },
-      transports: ["websocket", "polling"],
-      autoConnect: true,
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      timeout: 20000,
-    });
-
-    socketRef.current.on("connect", () => setSocketConnected(true));
-    socketRef.current.on("disconnect", () => setSocketConnected(false));
-    socketRef.current.on("connect_error", () => setSocketConnected(false));
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-    };
-  }, [currentUserId]);
-
   // Listen for new messages for the current chat
   useEffect(() => {
-    if (!socketRef.current || !chat?.id) return;
+    if (!socket || !chat?.id) return;
 
     const handleNewMessage = ({ message }: { message: any }) => {
       if (message && chat && message.chatId === chat.id) {
@@ -94,16 +57,15 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
       }
     };
 
-    socketRef.current.on("new_message", handleNewMessage);
-    socketRef.current.emit("join_chat", chat.id);
+    socket.on("new_message", handleNewMessage);
+    socket.emit("join_chat", chat.id);
     fetchMessages(chat.id);
 
     return () => {
-      socketRef.current?.emit("leave_chat", chat.id);
-      socketRef.current?.off("new_message", handleNewMessage);
+      socket.emit("leave_chat", chat.id);
+      socket.off("new_message", handleNewMessage);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chat?.id, fetchMessages]);
+  }, [chat, fetchMessages, socket]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -145,7 +107,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
       } else if (chat && chat.participants && chat.participants.length > 2) {
         // Group logic
         setLastSeen(null);
-        setOnlineText(""); // Not used for group in header
+        setOnlineText(""); 
         setIsOtherUserOnline(false);
       } else {
         setOnlineText("Connecting...");
@@ -156,7 +118,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
     return () => { isMounted = false; };
   }, [chat, onlineFriends, getUserSeen, currentUserId, otherUserId]);
 
-  // Helper to format "last seen" string
+  //  format "last seen" string
   function formatLastSeen(isoString: string) {
     if (!isoString) return "";
     const date = new Date(isoString);
@@ -177,7 +139,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
       setInput('');
       setFile(null);
     } catch (error) {
-      // Handle error if needed
+
     } finally {
       setSending(false);
     }
@@ -217,7 +179,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
   const groupParticipantStatus: Record<number, "online" | "offline"> = {};
   if (chat && chat.participants && chat.participants.length > 2) {
     chat.participants.forEach(p => {
-      if (p.id === currentUserId) return; // Skip self
+      if (p.id === currentUserId) return; 
       groupParticipantStatus[p.id] = onlineFriends.includes(p.id) ? "online" : "offline";
     });
   }
@@ -237,8 +199,31 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
             </div>
             <div>
               <h3 className="mb-1 font-semibold text-primary">{chat ? chat.name : ""}</h3>
-              <div className="text-secondary text-sm">
-                {chat && chat.participants && chat.participants.length === 2 ? onlineText : ""}
+              <div className="text-secondary text-sm flex items-center gap-2">
+                {chat && chat.participants && chat.participants.length === 2 ? (
+                  <>
+                    {socketConnected ? (
+                      <span className="inline-flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
+                        <span>Connected</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-gray-400 inline-block"></span>
+                        <span>Offline</span>
+                      </span>
+                    )}
+                    <span className="mx-1">•</span>
+                    <span>
+                      {onlineText}
+                      {lastSeen && onlineText.startsWith("Last seen") && (
+                        <span className="ml-1 text-xs text-gray-400">
+                          ({lastSeen})
+                        </span>
+                      )}
+                    </span>
+                  </>
+                ) : ""}
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 
-// components/Friends/SearchInput.tsx
-import React from 'react';
+"use client";
+
 
 interface SearchInputProps {
   value: string;

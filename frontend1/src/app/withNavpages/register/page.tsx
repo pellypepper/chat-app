@@ -7,9 +7,7 @@ import SuccessPopup from '@/component/successPop';
 import ErrorPopup from '../../../component/errorpopup';
 import { MultiRingSpinner } from '../../../component/spinner';
 import { useRouter } from 'next/navigation';
-type RegisterProps = {
-
-};
+type RegisterProps = object;
 
 const Register: React.FC<RegisterProps> = ({ }) => {
   const [firstName, setFirstName] = useState('');
@@ -18,17 +16,17 @@ const Register: React.FC<RegisterProps> = ({ }) => {
   const [password, setPassword] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
- 
  const { register, isLoading, error, verificationSent } = useAuthStore();
 
 
  const router = useRouter();
   
-
+// Handle navigation to Sign In page
   const handleSigninClick = () => {
   router.push('/withNavpages/signin');
   };
 
+  // Effect to handle success or error states
  useEffect(() => {
   console.log('verificationSent:', verificationSent, 'error:', error);
   if (verificationSent) {
@@ -41,6 +39,7 @@ const Register: React.FC<RegisterProps> = ({ }) => {
 }, [verificationSent, error]);
 
 
+// Handle form submission
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
 
@@ -147,6 +146,8 @@ const Register: React.FC<RegisterProps> = ({ }) => {
 >
   {isLoading ? 'Creating Account...' : 'Create Account'}
 </button>
+
+  {/* Display error message if exists */}
 {error && (
   <div className="text-red-500 text-sm mt-2 text-center">
     {error}
@@ -165,6 +166,7 @@ const Register: React.FC<RegisterProps> = ({ }) => {
         </div>
       </div>
 
+      {/* Success Popups */}
       {showSuccess && (
         <SuccessPopup
           message={`A verification code has been sent to ${email}. Click continue to input your code.`}
@@ -175,6 +177,7 @@ const Register: React.FC<RegisterProps> = ({ }) => {
         />
       )}
 
+ {/*  Error Popups */}
       {showError && !showSuccess && (
         <ErrorPopup
           message={error || 'An error occurred while creating your account. Please try again.'}
@@ -182,6 +185,7 @@ const Register: React.FC<RegisterProps> = ({ }) => {
         />
       )}
 
+       {/* Spinner */}
       {isLoading && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
     <MultiRingSpinner />

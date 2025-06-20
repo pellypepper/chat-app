@@ -26,7 +26,7 @@ interface Message {
 
 interface ChatStore {
   chats: Chat[];
-  messages: Record<number, Message[]>; // key = chatId
+  messages: Record<number, Message[]>; 
   loading: boolean;
   error: string | null;
 
@@ -53,21 +53,20 @@ fetchChatsSummary: async () => {
     const fetchedChats: Chat[] = res.data.chats;
 
     set({
-      // Replace the whole chats array with fetchedChats to avoid duplicates
-      // (assuming fetchedChats contains all chats from the server)
+   
       chats: fetchedChats,
       loading: false
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching chats:', error);
-    set({ error: error.message || 'Unknown error', loading: false });
+    set({ error: error instanceof Error ? error.message : 'Unknown error', loading: false });
   }
 },
 
   fetchMessages: async (chatId) => {
     set({ loading: true, error: null });
     try {
-      // Fix: Add proper endpoint and handle optional chatId
+   
       if (!chatId) {
         set({ loading: false });
         return;
@@ -82,9 +81,9 @@ fetchChatsSummary: async () => {
         },
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching messages:', error);
-      set({ error: error.message || 'Unknown error', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Unknown error', loading: false });
     }
   },
 
@@ -92,7 +91,7 @@ fetchChatsSummary: async () => {
   set({ loading: true, error: null });
   try {
     const res = await axios.post('/message/create-chat', { participantIds, name, isGroup });
-    // Always refetch chats from the backend to ensure up-to-date and normalized data
+    // refetch chats from the backend 
     await get().fetchChatsSummary();
     // Find the new chat from the freshly fetched state
     const newChatId = res.data.chat.id;
@@ -100,9 +99,9 @@ fetchChatsSummary: async () => {
     const newChat = updatedChats.find(chat => chat.id === newChatId) || null;
     set({ loading: false });
     return newChat;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating chat:', error);
-    set({ error: error.message || 'Unknown error', loading: false });
+    set({ error: error instanceof Error ? error.message : 'Unknown error', loading: false });
     return null;
   }
 },
@@ -115,7 +114,7 @@ fetchChatsSummary: async () => {
       if (content) formData.append('content', content);
       if (file) formData.append('image', file);
 
-      // Fix: Send formData directly, not wrapped in an object
+      // Send formData directly
       const res = await axios.post('/message/send-message', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -129,17 +128,17 @@ fetchChatsSummary: async () => {
         },
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending message:', error);
-      set({ error: error.message || 'Unknown error', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Unknown error', loading: false });
     }
   },
 
 
 
 
-  //Delete a message for everyone
-   deleteMessageEveryone: async (chatId:number, messageId:number) => {
+  
+  deleteMessageEveryone: async (chatId:number, messageId:number) => {
     set({ loading: true, error: null });
     try {
       await axios.delete(`/message/delete-user/${messageId}`);
@@ -150,9 +149,9 @@ fetchChatsSummary: async () => {
         },
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting message for everyone:', error);
-      set({ error: error.message || 'Unknown error', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Unknown error', loading: false });
     }
   },
 
@@ -168,9 +167,9 @@ fetchChatsSummary: async () => {
         ),
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting chat for everyone:', error);
-      set({ error: error.message || 'Unknown error', loading: false });
+      set({ error: error instanceof Error ? error.message : 'Unknown error', loading: false });
     }
   },
 

@@ -1,3 +1,6 @@
+
+"use client";
+
 import React, { useEffect, useState, useCallback } from 'react';
 import FriendCard from './friendCard';
 import TabNavigation from './friendTabNav';
@@ -7,13 +10,12 @@ import { useFriendsStore } from '@/store/friendStore';
 import { useChatStore } from '@/store/messageStore';
 import { useAuthStore } from '@/store/loginStore';
 import type { Chat, User } from '@/types/user';
-import io, { Socket } from "socket.io-client";
+import { useSocketContext } from '@/hooks/useSocket';
 
-const SOCKET_URL = "http://localhost:4000";
 
-let socket: Socket | null = null;
+
 type FriendProps = {
-    onChatSelect: (chatId: number, hat?: Chat) => void;
+    onChatSelect: (chatId: number, chat?: Chat) => void;
 };
 
 const Friends: React.FC<FriendProps> = ({ onChatSelect }) => {
@@ -51,15 +53,17 @@ const Friends: React.FC<FriendProps> = ({ onChatSelect }) => {
   const user = useAuthStore(state => state.user);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Memoized function to fetch all user statuses
+  const { socket} = useSocketContext();
+  // Function to fetch online friends
 const fetchUserStatuses = useCallback(() => {
   const onlineIds = useFriendsStore.getState().onlineFriends;
    let filteredUsers: User[] = [];
   if (searchQuery.trim()) {
-    // Use backend results only for search
+
+    // Use backend results 
     filteredUsers = useFriendsStore.getState().searchResults;
   } else {
+
     // Use local filtering for tabs when not searching
     filteredUsers = getFilteredUsers(activeTab, "");
   }
@@ -73,24 +77,11 @@ const fetchUserStatuses = useCallback(() => {
 }, [activeTab, searchQuery]);
 
   // Socket connection logic (unchanged)
-  useEffect(() => {
-    if (!user?.id) return;
-
-    if (!socket) {
-      socket = io(SOCKET_URL, {
-        query: { userId: user.id.toString() },
-        transports: ["websocket", "polling"],
-        autoConnect: true,
-        reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionAttempts: 5,
-        timeout: 20000,
-      });
-    }
+ useEffect(() => {
+    if (!user?.id || !socket) return;
 
     const handleStatusChange = () => {
       fetchOnlineFriends();
-      // Refetch statuses when users come online/offline
       fetchUserStatuses();
     };
 
@@ -100,17 +91,18 @@ const fetchUserStatuses = useCallback(() => {
     fetchOnlineFriends();
 
     return () => {
-      socket?.off('user_online', handleStatusChange);
-      socket?.off('user_offline', handleStatusChange);
+      socket.off('user_online', handleStatusChange);
+      socket.off('user_offline', handleStatusChange);
     };
-  }, [user?.id, fetchOnlineFriends, fetchUserStatuses]);
+  }, [user?.id, fetchOnlineFriends, fetchUserStatuses, socket]);
+
 
   // Fetch user statuses when filtered users change
   useEffect(() => {
     fetchUserStatuses();
   }, [fetchUserStatuses]);
 
-  // Search logic (unchanged)
+  // Search logic 
   useEffect(() => {
     if (!searchQuery.trim()) {
       clearSearch();
@@ -125,7 +117,7 @@ const fetchUserStatuses = useCallback(() => {
     usersToFilter.some(u => u.id === user.id)
   );
 
-  // Handler functions (unchanged)
+  // Handler functions
   const handleAddFriend = async (userId: number) => {
     await addFriend(userId);
     await fetchFriends();
@@ -227,7 +219,7 @@ const fetchUserStatuses = useCallback(() => {
                     isFriend={isFriend}
                     key={user.id}
                     user={user}
-                    status={userStatus} // Pass the fetched status
+                    status={userStatus} 
                     onMessage={isFriend ? () => handleMessage(user.id) : undefined}
                     onAdd={!isFriend ? () => handleAddFriend(user.id) : undefined}
                     onRemove={isFriend ? () => handleRemoveFriend(user.id) : undefined}
