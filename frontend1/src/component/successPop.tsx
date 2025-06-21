@@ -12,6 +12,7 @@ type SuccessPopupProps = {
 
 const SuccessPopup: React.FC<SuccessPopupProps> = ({ message, showContinueButton, handleTimeout, url, tempState }) => {
   const router = useRouter();
+  const [visible, setVisible] = React.useState(true);
 
   const handleContinue = () => {
     if (handleTimeout) handleTimeout();
@@ -25,11 +26,16 @@ const SuccessPopup: React.FC<SuccessPopupProps> = ({ message, showContinueButton
     router.push(path);
   };
 
+   const handleClose = () => {
+    setVisible(false);
+    if (handleTimeout) handleTimeout();
+  };
+  if (!visible) return null;
   return (
     <div id="success-popup" className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-gray-800 text-primary rounded-2xl p-8 max-w-md w-full relative shadow-lg">
         <button
-          onClick={handleTimeout}
+          onClick={handleClose }
           className="absolute top-3 right-4 text-2xl text-white hover:text-red-400"
         >
           &times;

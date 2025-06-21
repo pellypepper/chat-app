@@ -58,7 +58,8 @@ const handleLogout = async () => {
     <section className=" p-4 h-screen bg-primary-bg flex flex-col">
       <div className="flex justify-between p-5 items-center mb-4">
         <div className="w-10 h-10 rounded-full bg-gradient-icon text-primary flex items-center justify-center font-semibold">
- {(user?.firstname?.[0] || "") + (user?.lastname?.[0] || "")}
+{(user?.firstname?.[0]?.toUpperCase() || "") + (user?.lastname?.[0]?.toUpperCase() || "")}
+
         </div>
         <div className="flex gap-2">
           <p onClick={handleClick} className="text-primary text-xl md:text-2xl cursor-pointer">⚙️</p>
@@ -96,21 +97,27 @@ const handleLogout = async () => {
             <div className="p-4 flex-shrink-0">
               <Stories />
             </div>
-            <div className="flex-1 overflow-y-auto scrollbar-auto-hide px-5">
-              <Messages
-                onChatSelect={onChatSelect}
-                conversations={chats
-                          .filter(chat => !chat.isGroup)
-                  .map((chat) => ({
-                  id: Number(chat.id),
-                  name: chat.name,
-                  avatar: '',
-                  message: chat.lastMessage || '', 
-                  time: chat.lastMessageAt || '',
-                  unread: 0, 
-                }))}
-              />
-            </div>
+<div className="flex-1 overflow-y-auto scrollbar-auto-hide px-5">
+  <Messages
+    onChatSelect={onChatSelect}
+    conversations={chats
+  .filter(chat => !chat.isGroup)
+  .map(chat => {
+   
+    const participantWithPicture = chat.participants.find(p => p.profilePicture);
+
+    return {
+      id: Number(chat.id),
+      name: chat.name,
+      avatar: participantWithPicture ? participantWithPicture.profilePicture : '', 
+      message: chat.lastMessage || '',
+      time: chat.lastMessageAt || '',
+      unread: 0,
+    };
+  })}
+  />
+</div>
+
           </div>
         )}
 

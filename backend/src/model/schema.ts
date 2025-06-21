@@ -21,6 +21,10 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   verified: boolean("verified").default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+
+  // New columns
+  profilePicture: varchar("profile_picture", { length: 500 }), 
+  bio: text("bio"), // Optional biography
 });
 
 // Email Verifications Table (Already defined)

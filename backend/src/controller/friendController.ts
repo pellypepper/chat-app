@@ -32,6 +32,8 @@ export const allUsers = async (req: Request, res: Response) => {
         firstname: users.firstname,
         lastname: users.lastname,
         email: users.email,
+
+        profilePicture: users.profilePicture,
       })
       .from(users)
      .where(not(eq(users.id, userId))) 
@@ -102,6 +104,8 @@ export const getFriends = async (req: Request, res: Response) => {
         firstname: users.firstname,
         lastname: users.lastname,
         email: users.email,
+
+        profilePicture: users.profilePicture,
       })
       .from(friends)
       .innerJoin(users, eq(friends.friendId, users.id))

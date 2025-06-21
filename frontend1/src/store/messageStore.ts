@@ -8,7 +8,7 @@ axios.defaults.baseURL = "http://localhost:4000";
 interface Chat {
   id: number;
   name: string;
-  participants: { id: number }[];
+  participants: { id: number, profilePicture: string }[];
   isGroup: boolean;
   lastMessage: string | null;
   lastMessageAt: string | null;

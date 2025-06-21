@@ -1,17 +1,12 @@
 import { create } from "zustand";
 import axios from "axios";
 import { devtools } from "zustand/middleware";
+import {User} from "../types/user"; 
 
 axios.defaults.withCredentials = true;
 axios.defaults.baseURL = "http://localhost:4000";
 
-interface User {
-  id: number;
-  firstname: string;
-  lastname: string;
-  email: string;
-  verified: boolean;
-}
+
 
 interface ProfileState {
   user: User | null;
@@ -19,10 +14,12 @@ interface ProfileState {
   error: string | null;
   message: string | null;
 
+
   getProfile: () => Promise<void>;
   updateProfile: (data: Partial<Omit<User, "id" | "verified">>) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
+  uploadProfilePicture: (file: File) => Promise<void>;
   resetPassword: (data: { email: string; token: string; newPassword: string }) => Promise<void>;
   clearState: () => void;
 }
@@ -33,6 +30,7 @@ export const useProfileStore = create<ProfileState>()(
     isLoading: false,
     error: null,
     message: null,
+
 
     getProfile: async () => {
       set({ isLoading: true, error: null, message: null });
@@ -59,7 +57,7 @@ export const useProfileStore = create<ProfileState>()(
       }
     },
 
-changePassword: async (currentPassword, newPassword) => {
+    changePassword: async (currentPassword, newPassword) => {
   set({ isLoading: true, error: null, message: null });
   try {
     const res = await axios.put("/profile/change-password", {
@@ -77,7 +75,7 @@ changePassword: async (currentPassword, newPassword) => {
   } finally {
     set({ isLoading: false });
   }
-},
+   } ,
 
     forgotPassword: async (email) => {
       set({ isLoading: true, error: null, message: null });
@@ -100,6 +98,27 @@ changePassword: async (currentPassword, newPassword) => {
           newPassword,
         });
         set({ message: res.data.message });
+      } catch (err: any) {
+        set({ error: err.response?.data?.error || err.message });
+      } finally {
+        set({ isLoading: false });
+      }
+    },
+
+    uploadProfilePicture: async (file: File) => {
+      set({ isLoading: true, error: null, message: null });
+      const formData = new FormData();
+      formData.append("image", file);
+
+      try {
+        const res = await axios.post("/profile/upload-profile-picture", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        set({ message: res.data.message });
+    
+        await useProfileStore.getState().getProfile();
       } catch (err: any) {
         set({ error: err.response?.data?.error || err.message });
       } finally {

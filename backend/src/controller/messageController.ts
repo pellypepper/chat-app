@@ -26,21 +26,19 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
   }
 
   try {
-    //  Get all chats user participates in
+    // Get all chats user participates in
     const userChatsList = await db
-      .select({
-        chatId: userChats.chatId,
-      })
+      .select({ chatId: userChats.chatId })
       .from(userChats)
       .where(eq(userChats.userId, userId));
 
-    const chatIds = userChatsList.map((row) => row.chatId);
+    const chatIds = userChatsList.map(row => row.chatId);
 
     if (chatIds.length === 0) {
       return res.status(200).json({ chats: [] });
     }
 
-    //  Fetch chat details
+    // Fetch chat details
     const chatsDetails = await db
       .select({
         id: chats.id,
@@ -50,7 +48,7 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
       .from(chats)
       .where(inArray(chats.id, chatIds));
 
-    //  Fetch last message per chat
+    // Fetch last messages
     const lastMessages = await db
       .select({
         chatId: messages.chatId,
@@ -61,7 +59,6 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
       .where(inArray(messages.chatId, chatIds))
       .orderBy(desc(messages.createdAt));
 
-    // Reduce lastMessages to get only the last message per chatId
     const lastMessageMap = new Map<number, { content: string; createdAt: Date }>();
     for (const msg of lastMessages) {
       if (!lastMessageMap.has(msg.chatId) && msg.createdAt) {
@@ -69,36 +66,39 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
       }
     }
 
-    //  Fetch all userChats for these chats, including user names
+    // Fetch all users for each chat
     const allUserChats = await db
       .select({
         chatId: userChats.chatId,
         userId: userChats.userId,
         userName: sql`${users.firstname} || ' ' || ${users.lastname}`.as("userName"),
+        profilePicture: users.profilePicture,
       })
       .from(userChats)
       .innerJoin(users, eq(userChats.userId, users.id))
       .where(inArray(userChats.chatId, chatIds));
 
     // Group users by chatId
-    const chatUsersMap = new Map<number, { userId: number; firstname: string }[]>();
+    const chatUsersMap = new Map<number, { userId: number; name: string; profilePicture?: string }[]>();
     for (const uc of allUserChats) {
       if (!chatUsersMap.has(uc.chatId)) {
         chatUsersMap.set(uc.chatId, []);
       }
-      chatUsersMap.get(uc.chatId)!.push({ userId: uc.userId, firstname: uc.userName as string });
+      chatUsersMap.get(uc.chatId)!.push({
+        userId: uc.userId,
+        name: uc.userName as string,
+        profilePicture: uc.profilePicture || undefined,
+      });
     }
 
-    //  Construct final array with chat info, last message, and all participants
-    const chatsSummary = chatsDetails.map((chat) => {
-      let displayName = chat.name; // for groups
-
+    // Build final chat summaries
+    const chatsSummary = chatsDetails.map(chat => {
       const participants = chatUsersMap.get(chat.id) || [];
 
+      let displayName = chat.name;
       if (!chat.isGroup && participants.length > 0) {
-        // For 1-on-1, find the other user
-        const otherParticipant = participants.find((p) => p.userId !== userId);
-        displayName = otherParticipant ? otherParticipant.firstname : 'Unknown';
+        const otherParticipant = participants.find(p => p.userId !== userId);
+        displayName = otherParticipant ? otherParticipant.name : 'Unknown';
       }
 
       const lastMessage = lastMessageMap.get(chat.id);
@@ -107,13 +107,29 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
         id: chat.id,
         name: displayName,
         isGroup: chat.isGroup,
-        participants: participants.map(p => ({ id: p.userId, name: p.firstname})), // Include all participants!
-        lastMessage: lastMessage ? lastMessage.content : null,
-        lastMessageAt: lastMessage ? lastMessage.createdAt : null,
+       participants: participants.map(p => {
+  const isCurrentUser = p.userId === userId;
+  const participantData: { id: number; name: string; profilePicture?: string } = {
+    id: p.userId,
+    name: p.name,
+  };
+
+  // Only include profilePicture if:
+  // 1. It's a 1-on-1 chat
+  // 2. The participant is NOT the current user
+  // 3. The profilePicture exists
+  if (!chat.isGroup && !isCurrentUser && p.profilePicture) {
+    participantData.profilePicture = p.profilePicture;
+  }
+
+  return participantData;
+}),
+
+        lastMessage: lastMessage?.content || null,
+        lastMessageAt: lastMessage?.createdAt || null,
       };
     });
 
-    // Sort by lastMessageAt descending (most recent first)
     chatsSummary.sort((a, b) => {
       if (a.lastMessageAt === null && b.lastMessageAt === null) return 0;
       if (a.lastMessageAt === null) return 1;
@@ -127,6 +143,8 @@ export const getUserChatsSummary = async (req: Request, res: Response): Promise<
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
 
 
 

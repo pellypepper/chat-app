@@ -202,27 +202,19 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
               <div className="text-secondary text-sm flex items-center gap-2">
                 {chat && chat.participants && chat.participants.length === 2 ? (
                   <>
-                    {socketConnected ? (
-                      <span className="inline-flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span>
-                        <span>Connected</span>
-                      </span>
+                    {isOtherUserOnline ? (
+                      <span className="text-green-500">Online</span>
                     ) : (
-                      <span className="inline-flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-gray-400 inline-block"></span>
-                        <span>Offline</span>
+                      <span className="text-gray-400">{onlineText}</span>
+                    )}
+                    {lastSeen && !isOtherUserOnline && (
+                      <span className="text-xs text-gray-500">
+                        {formatLastSeen(lastSeen)}
                       </span>
                     )}
-                    <span className="mx-1">•</span>
-                    <span>
-                      {onlineText}
-                      {lastSeen && onlineText.startsWith("Last seen") && (
-                        <span className="ml-1 text-xs text-gray-400">
-                          ({lastSeen})
-                        </span>
-                      )}
-                    </span>
                   </>
+                ) : chat && chat.participants && chat.participants.length > 2 ? (
+                  <span className="text-gray-400">Group Chat</span>
                 ) : ""}
               </div>
             </div>

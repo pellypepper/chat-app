@@ -2,18 +2,9 @@
 import { create } from "zustand";
 import axios from "axios";
 import { devtools } from "zustand/middleware";
-
+import {User} from "../types/user"; 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "http://localhost:4000"; // Adjust if needed
-
-interface User {
-  id: number;
-  firstname: string;
-  lastname: string;
-  email: string;
-  verified: boolean;
-  // add any other user fields you return
-}
+axios.defaults.baseURL = "http://localhost:4000"; 
 
 interface AuthState {
   user: User | null;

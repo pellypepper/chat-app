@@ -1,13 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useProfileStore } from "@/store/profileStore";
 import { useRouter } from "next/navigation";
 import { useFriendsStore } from "@/store/friendStore";
 import { useChatStore } from "@/store/messageStore";
+import Image from "next/image";
+
+
+
 const ProfileDetails = () => {
-  const { getProfile, user,  updateProfile, isLoading} = useProfileStore();
+  const { getProfile, user,  updateProfile, uploadProfilePicture,  isLoading} = useProfileStore();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+
+  const [picture, setPicture] = useState<string | null>(null);
 const {friends} = useFriendsStore();
   const router = useRouter();
   const { chats } = useChatStore();
@@ -23,6 +29,8 @@ useEffect(() => {
     setFirstName(user.firstname);
     setLastName(user.lastname);
     setEmail(user.email);
+    setPicture(user.profilePicture || "");
+
   }
 }, [user]);
 
@@ -41,6 +49,21 @@ const group = chats.filter((chat) => chat.isGroup);
     }
   };
 
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadProfilePicture(file);
+    }
+  };
+
+    const initials = `${firstName?.[0] || ""}${lastName?.[0] || ""}`;
+
   return (
     <div id="profile">
       <div className="text-center mb-6 pt-4">
@@ -52,11 +75,32 @@ const group = chats.filter((chat) => chat.isGroup);
 
       <div className="bg-[#161b22]/80 border border-primary rounded-2xl p-6 mb-4 relative overflow-hidden text-center backdrop-blur-lg">
         <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-purple opacity-10"></div>
-        <div className="w-20 h-20 rounded-full border-4 border-blue-400 mx-auto bg-gradient-purple flex items-center justify-center text-3xl relative z-10">
-          {firstName?.[0] || ""}{lastName?.[0] || ""}
-        </div>
+       <div
+      className="w-20 h-20 rounded-full border-4 border-blue-400 mx-auto bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-3xl text-white cursor-pointer overflow-hidden relative z-10"
+      onClick={handleClick}
+    >
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {picture ? (
+        <Image
+          width={80}
+          height={80}
+          src={picture}
+          alt="Profile"
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        initials
+      )}
+    </div>
         <div className="text-xl font-bold mt-2">{firstName} {lastName}</div>
-        <div className="text-secondary mb-2">Always learning something new 🚀</div>
+
         <div className="flex justify-around pt-4 border-t border-primary">
           <div className="text-center">
             <div className="text-xl font-bold text-blue-400">{friends.length}</div>

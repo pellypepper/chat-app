@@ -4,6 +4,7 @@ export interface User {
   firstname: string;
   lastname: string;
   email: string;
+  profilePicture?: string;
 
 }
 
@@ -40,6 +41,7 @@ export type Chat = {
   name: string;
   isGroup: boolean;
   participants: { id: number, name:string }[];
+  avatar?: string;
 lastMessage?: string;
 lastMessageAt?: string;
 };

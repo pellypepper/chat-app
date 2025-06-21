@@ -5,7 +5,7 @@ import { Request, Response } from "express";
 import { db } from "../util/db";
 import bcrypt from 'bcrypt';
 import crypto from "crypto";
-
+import { compressAndUpload } from '../middleware/upload'; 
 // Extend Express Request interface 
 declare global {
   namespace Express {
@@ -46,7 +46,7 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
 
 // Update user profile
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
-  const { firstname, lastname, email } = req.body;
+  const { firstname, lastname,  email } = req.body;
   const userId = Number(req.user?.id);
 
   if (!userId) {
@@ -57,6 +57,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   const updateFields: Record<string, string> = {};
   if (firstname !== undefined) updateFields.firstname = firstname.trim();
   if (lastname !== undefined) updateFields.lastname = lastname.trim();
+ 
  
 
   try {
@@ -172,7 +173,47 @@ export const forgetPassword = async (req: Request, res: Response): Promise<void>
   }
 }
 
+// Upload profile picture
+export const UploadProfilePicture = async (req: Request, res: Response): Promise<void> => {
+    const userId = Number(req.user?.id);
+    const Image = req.file; 
 
+    // Check if the user exists
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    try {
+      // Check if the image file is provided
+      if (!Image) {
+        res.status(400).json({ error: "Image file is required" });
+        return;
+      }
+
+      // uPLOAD AND COMPRESS THE IMAGE
+       const imageUrl = await compressAndUpload(Image); 
+      if (!imageUrl) {
+        res.status(500).json({ error: "Failed to upload image" });
+        return;
+      }
+
+      // Update the user's profile picture URL in the database
+      const updatedUser = await db
+        .update(users)
+        .set({ profilePicture: imageUrl })
+        .where(eq(users.id, userId))
+        .returning();
+      res.status(200).json({ message: "Profile picture updated successfully", user: updatedUser[0] });
+
+
+    }
+
+catch (error) {
+    console.error("Error uploading profile picture:", error); 
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
 
 
 

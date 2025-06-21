@@ -1,22 +1,15 @@
 
 import { create } from 'zustand';
 import axios from 'axios';
-
+import {User} from '../types/user';
 axios.defaults.withCredentials = true;
 axios.defaults.baseURL = "http://localhost:4000";
 
-interface Friend {
-  id: number;
-  firstname: string;
-  lastname: string;
-  email: string;
-}
-
 interface FriendsState {
-  allUsers: Friend[];
-  friends: Friend[];
+  allUsers: User[];
+  friends:  User[];
   onlineFriends: number[]; 
-  searchResults: Friend[];
+  searchResults: User[];
 
   loading: boolean;
   error: string | null;

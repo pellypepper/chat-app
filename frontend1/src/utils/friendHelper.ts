@@ -1,5 +1,5 @@
 
-import { User } from '@/types/user'; // Assuming this exists
+import { Friend, User } from '@/types/user'; // Assuming this exists
 import { useFriendsStore } from '@/store/friendStore';
 
 
@@ -35,5 +35,6 @@ export const getFilteredUsers = (activeTab: string, searchQuery: string): User[]
     user.firstname.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.lastname.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
+
   );
 };
