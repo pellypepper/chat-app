@@ -209,7 +209,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
                     )}
                     {lastSeen && !isOtherUserOnline && (
                       <span className="text-xs text-gray-500">
-                        {formatLastSeen(lastSeen)}
+            
                       </span>
                     )}
                   </>
