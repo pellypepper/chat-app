@@ -10,12 +10,13 @@ import CreateGroup from '@/component/createGroup';
 import type { Chat } from '@/types/user';
 import { MultiRingSpinner } from '@/component/spinner';
 import { useFriendsStore } from '@/store/friendStore';
-
+import UpdateGroup from '@/component/updateGroup';
 
 const Dashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+    const [showUpdateGroup, setShowUpdateGroup] = useState(false);
   const {  isAuthenticated, getSession } = useAuthStore();
   const { chats ,  fetchChatsSummary} = useChatStore();
   const [loading, setLoading] = useState(true);
@@ -118,10 +119,24 @@ const handleGroup = () => {
   setShowCreateGroup(!showCreateGroup);
 }
 
+const handleUpdateOpen = () => {
+  setShowUpdateGroup(!showUpdateGroup);
+}
 // Handle click outside to close create group modal
 const handleClickOutside = () => {
   setShowCreateGroup(false);
+   setShowUpdateGroup(false);
 }
+  const handleGroupUpdated = (updated: { id: number; name: string; participants: number[] }) => {
+    setSelectedChat(prev => prev && prev.id === updated.id
+      ? { ...prev, name: updated.name, participants: updated.participants.map(id => {
+          // Try to keep other participant info if possible (like name)
+          const found = prev.participants.find(p => p.id === id);
+          return found ? found : { id, name: "" };
+        }) }
+      : prev
+    );
+  };
 
   const handleBack = () => setSelectedChat(null);
 
@@ -150,7 +165,7 @@ const handleClickOutside = () => {
       {/* Mobile View */}
       <div className="md:hidden overflow-hidden ">
         {selectedChat ? (
-          <Rightdashboard chat={selectedChat} onBack={handleBack} />
+          <Rightdashboard chat={selectedChat} handleUpdateOpen={handleUpdateOpen} onBack={handleBack} />
         ) : (
           <Leftdashboard handleGroup={handleGroup}  onChatSelect={handleChatSelect} handleClick={handleClick} />
         )}
@@ -162,7 +177,7 @@ const handleClickOutside = () => {
           <Leftdashboard handleGroup={handleGroup} onChatSelect={handleChatSelect} handleClick={handleClick} />
         </div>
         <div className="overflow-hidden">
-          <Rightdashboard  onBack={handleBack} chat={selectedChat} />
+          <Rightdashboard  onBack={handleBack} handleUpdateOpen={handleUpdateOpen} chat={selectedChat} />
         </div>
       </div>
 
@@ -186,6 +201,17 @@ const handleClickOutside = () => {
    <div className={`${showCreateGroup ? "block" : "hidden"} absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center h-full border p-4 md:p-8 z-[100]`}>
     <CreateGroup handleClickOutside={handleClickOutside}  />
 </div>
+
+   <div className={`${showUpdateGroup ? "block" : "hidden"} absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center h-full border p-4 md:p-8 z-[100]`}>
+  {selectedChat && (
+          <UpdateGroup handleClickOutside={handleClickOutside}  onGroupUpdated={handleGroupUpdated}  group={{
+    id: selectedChat.id,
+    name: selectedChat.name,
+    participants: selectedChat.participants.map(p => p.id),
+  }} />
+        )}
+</div>
+  
 
     </div>
   );

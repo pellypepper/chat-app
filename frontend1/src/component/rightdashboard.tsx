@@ -8,12 +8,14 @@ import { useEffect, useRef, useMemo, useState } from 'react';
 import Image from 'next/image';
 import {useSocketContext} from '@/hooks/useSocket';
 
+
 type RightdashboardProps = {
   onBack: () => void;
+handleUpdateOpen: () => void;
   chat: Chat | null;
 };
 
-const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
+const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, onBack }) => {
   const {
     fetchMessages,
     messages,
@@ -53,6 +55,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
 
     const handleNewMessage = ({ message }: { message: any }) => {
       if (message && chat && message.chatId === chat.id) {
+  
         fetchMessages(chat.id);
       }
     };
@@ -162,6 +165,15 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
     }
   };
 
+  const handleInfo = () => {
+
+    if(chat?.isGroup){
+      console.log("Group chat info");
+      handleUpdateOpen();
+      console.log("Group chat participants:", chat.participants);
+    }
+  }
+
   const isImageUrl = (url: string) => {
     if (!url || typeof url !== 'string') return false;
     if (url.includes('pelly-chat.s3.') && /\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
@@ -220,13 +232,18 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat, onBack }) => {
             </div>
           </div>
           <div className="flex gap-3">
-            <button className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary text-secondary hover:text-primary flex items-center justify-center transition">
-              📞
-            </button>
-            <button className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary  text-secondary hover:text-primary flex items-center justify-center transition">
-              📹
-            </button>
-            <button className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary  text-secondary hover:text-primary flex items-center justify-center transition">
+         {!chat?.isGroup && (
+  <>
+    <button className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary text-secondary hover:text-primary flex items-center justify-center transition">
+      📞
+    </button>
+    <button className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary text-secondary hover:text-primary flex items-center justify-center transition">
+      📹
+    </button>
+  </>
+)}
+
+            <button onClick={handleInfo} className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary  text-secondary hover:text-primary flex items-center justify-center transition">
               ℹ️
             </button>
             <button

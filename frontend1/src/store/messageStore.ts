@@ -36,7 +36,12 @@ interface ChatStore {
   sendMessage: (chatId: number, content?: string, file?: File) => Promise<void>;
  deleteChatEveryone: (chatId: number) => Promise<void>;
  deleteMessageEveryone: (chatId: number, messageId: number) => Promise<void>;
-
+updateGroupChat: (
+    chatId: number,
+    name?: string,
+    addUserIds?: number[],
+    removeUserIds?: number[]
+  ) => Promise<void>;
   clearError: () => void;
 }
 
@@ -134,10 +139,25 @@ fetchChatsSummary: async () => {
     }
   },
 
+  updateGroupChat: async (chatId, name, addUserIds = [], removeUserIds = []) => {
+    set({ loading: true, error: null });
+    try {
+      await axios.put(`/message/update-group/${chatId}`, {
+        name,
+        addUserIds,
+        removeUserIds
+      });
 
+      // Refresh chat summaries after update
+      await get().fetchChatsSummary();
 
+      set({ loading: false });
+    } catch (error: unknown) {
+      console.error('Error updating group chat:', error);
+      set({ error: error instanceof Error ? error.message : 'Unknown error', loading: false });
+    }
+  },
 
-  
   deleteMessageEveryone: async (chatId:number, messageId:number) => {
     set({ loading: true, error: null });
     try {

@@ -402,6 +402,108 @@ export const sendMessage = async (req: Request, res: Response) => {
   }
 };
 
+export const updateGroupChat = async (req: Request, res: Response) => {
+  const userId = Number(req.user?.id);
+  const chatId = Number(req.params.chatId);
+  const { name, addUserIds = [], removeUserIds = [] } = req.body;
+
+  if (!userId || !chatId) {
+ res.status(400).json({ error: 'Missing user or chat ID' });
+    return 
+  }
+
+  try {
+    // Verify chat exists and is a group
+    const [chat] = await db
+      .select()
+      .from(chats)
+      .where(eq(chats.id, chatId));
+
+    if (!chat) {
+    res.status(404).json({ error: 'Chat not found' });
+       return 
+    }
+
+    if (!chat.isGroup) {
+   res.status(400).json({ error: 'Only group chats can be updated' });
+         return 
+    }
+
+    // Check user is a participant
+    const [isParticipant] = await db
+      .select()
+      .from(userChats)
+      .where(and(eq(userChats.chatId, chatId), eq(userChats.userId, userId)));
+
+    if (!isParticipant) {
+     res.status(403).json({ error: 'You are not a participant of this chat' });
+      return;
+    }
+
+    // ✅ Rename group chat
+    if (name && name !== chat.name) {
+      await db.update(chats).set({ name }).where(eq(chats.id, chatId));
+    }
+
+    // ✅ Add new participants (ignore duplicates)
+    if (Array.isArray(addUserIds) && addUserIds.length > 0) {
+      const existingUsers = await db
+        .select({ userId: userChats.userId })
+        .from(userChats)
+        .where(eq(userChats.chatId, chatId));
+
+      const existingIds = new Set(existingUsers.map(u => u.userId));
+      const newUserIds = addUserIds.filter(id => !existingIds.has(id));
+
+      const newLinks = newUserIds.map(userId => ({
+        chatId,
+        userId
+      }));
+
+      if (newLinks.length > 0) {
+        await db.insert(userChats).values(newLinks);
+
+        // Notify new users
+        newUserIds.forEach(id => {
+          io.to(`user_${id}`).emit('added_to_chat', { chatId });
+        });
+      }
+    }
+
+    // ✅ Remove participants (cannot remove self if alone)
+    if (Array.isArray(removeUserIds) && removeUserIds.length > 0) {
+      // Prevent removing self if it leaves the group empty
+      const currentParticipants = await db
+        .select()
+        .from(userChats)
+        .where(eq(userChats.chatId, chatId));
+
+      const remaining = currentParticipants.filter(p => !removeUserIds.includes(p.userId));
+      if (remaining.length < 2) {
+        res.status(400).json({ error: 'Cannot remove all participants from group chat' });
+        return;
+      }
+
+      await db
+        .delete(userChats)
+        .where(and(
+          eq(userChats.chatId, chatId),
+          inArray(userChats.userId, removeUserIds)
+        ));
+
+      // Notify removed users
+      removeUserIds.forEach(id => {
+        io.to(`user_${id}`).emit('removed_from_chat', { chatId });
+      });
+    }
+
+    res.status(200).json({ message: 'Group chat updated successfully' });
+  } catch (error) {
+    console.error('Update group chat error:', error);
+res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 
 
 export const deleteMessageForEveryone = async (req: Request, res: Response) => {
