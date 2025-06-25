@@ -1,4 +1,4 @@
-# Step 1: Build frontend
+# Build frontend
 FROM node:20 AS frontend
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
@@ -6,22 +6,24 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# Step 2: Set up backend
+# Setup backend
 FROM node:18
 WORKDIR /app
 
-# Copy backend and install dependencies
+# Copy backend package files and install dependencies
 COPY backend/package*.json ./backend/
 RUN cd backend && npm install
 
-# Copy backend source and frontend build
+# Copy backend source code
 COPY backend/ ./backend/
+
+# Copy frontend build output into backend folder for static serving
 COPY --from=frontend /app/frontend/build ./backend/frontend/build
 
-# Set environment
+# Set backend working directory
 WORKDIR /app/backend
+
 ENV PORT=8080
 EXPOSE 8080
 
-# Run backend (make sure it serves static files from ./frontend/build)
 CMD ["node", "server.js"]
