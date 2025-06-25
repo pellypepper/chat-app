@@ -23,6 +23,9 @@ interface FriendsState {
   addFriend: (friendId: number) => Promise<void>;
   removeFriend: (friendId: number) => Promise<void>;
   clearSearch: () => void;
+
+  fetchFriendDetails: (friendId: number) => Promise<void>;
+  clearSelectedFriend: () => void;
 }
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
@@ -30,6 +33,7 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   friends: [],
   onlineFriends: [],
   searchResults: [],
+
   loading: false,
   error: null,
 
@@ -67,6 +71,22 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
       set({ error: message, loading: false });
     }
   },
+
+  
+fetchFriendDetails: async (friendId: number) => {
+  set({ loading: true, error: null });
+  try {
+    const res = await axios.get(`/friend/details/${friendId}`);
+    return res.data;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    set({ error: message, loading: false });
+  }
+},
+
+clearSelectedFriend: () => set({ selectedFriend: null }),
+
+
 
   searchFriends: async (query: string) => {
     if (!query.trim()) {

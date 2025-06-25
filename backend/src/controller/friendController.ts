@@ -244,6 +244,43 @@ export const getOnlineFriends = async (req: Request, res: Response) => {
   }
 };
 
+//get friend details by Id
+export const getFriendDetails = async (req: Request, res: Response) => {
+  const userId = Number(req.user?.id);
+  const friendId = Number(req.params.friendId);
+ console.log("Fetching details for friend ID:", friendId, "for user ID:", userId);
+  if (!userId || !friendId) {
+    res.status(400).json({ error: 'Missing user or friend ID' });
+    return;
+  }
+
+  try {
+    const friend = await db
+      .select({
+        id: users.id,
+        firstname: users.firstname,
+        lastname: users.lastname,
+        email: users.email,
+        profilePicture: users.profilePicture,
+      })
+      .from(users)
+      .where(eq(users.id, friendId))
+      .limit(1);
+
+    if (!friend.length) {
+      res.status(404).json({ error: 'Friend not found' });
+      return;
+    }
+
+    res.status(200).json({ friend: friend[0] });
+    return;
+  } catch (error) {
+    console.error('Get friend details error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+    return;
+  }
+};
+
 // Search friends by name or email
 export const searchFriends = async (req: Request, res: Response) => {
   const userId = Number(req.user?.id);

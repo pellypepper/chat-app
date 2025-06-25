@@ -1,6 +1,20 @@
 "use client";
+import { useRouter } from 'next/navigation';
 
 const Started = () => {
+
+  const router = useRouter();
+
+
+   const handleSigninClick = () => {
+   
+  router.push('/withNavpages/signin');
+  };
+     const handleRegister = () => {
+   
+  router.push('/withNavpages/register');
+  };
+
   return (
   <section className="py-32 px-[5%] text-center bg-gradient-started">
   <div className="animate-fadeInUp">
@@ -11,10 +25,10 @@ const Started = () => {
       Join millions of users who trust ChatFlow for their daily communication. Sign up today and experience the future of messaging.
     </p>
     <div className="flex justify-center gap-4 flex-wrap">
-      <button className="w-[150px] rounded animate bg-gradient-purple font-medium text-sm">
+      <button onClick={handleRegister} className="w-[150px] p-4 rounded animate bg-gradient-purple font-medium text-sm">
         Create Account
       </button>
-      <button  className="p-4 w-[150px] rounded animate border font-medium text-sm">
+      <button onClick={handleSigninClick}  className="p-4 w-[150px] rounded animate border font-medium text-sm">
         Sign In
       </button>
     </div>

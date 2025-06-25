@@ -97,25 +97,46 @@ const handleLogout = async () => {
             <div className="p-4 flex-shrink-0">
               <Stories />
             </div>
-<div className="flex-1 overflow-y-auto scrollbar-auto-hide px-5">
+<div className="flex-1 border-t  border-primary overflow-y-auto scrollbar-auto-hide px-5">
+{chats.length > 0 ? (
   <Messages
     onChatSelect={onChatSelect}
     conversations={chats
-  .filter(chat => !chat.isGroup)
-  .map(chat => {
-   
-    const participantWithPicture = chat.participants.find(p => p.profilePicture);
+      .filter(chat => !chat.isGroup)
+      .map(chat => {
+        const participantWithPicture = chat.participants.find(p => p.profilePicture);
 
-    return {
-      id: Number(chat.id),
-      name: chat.name,
-      avatar: participantWithPicture ? participantWithPicture.profilePicture : '', 
-      message: chat.lastMessage || '',
-      time: chat.lastMessageAt || '',
-      unread: 0,
-    };
-  })}
+        return {
+          id: Number(chat.id),
+          name: chat.name,
+          avatar: participantWithPicture ? participantWithPicture.profilePicture : '',
+          message: chat.lastMessage || '',
+          time: chat.lastMessageAt || '',
+          unread: 0,
+        };
+      })}
   />
+) : (
+  <div className="flex flex-col items-center justify-center mt-16 text-center text-secondary">
+    <svg
+      width={64}
+      height={64}
+      viewBox="0 0 64 64"
+      fill="none"
+      className="mb-4"
+    >
+      <circle cx="32" cy="32" r="32" fill="#23272F" />
+      <path d="M22 28a10 10 0 0 1 20 0v4a10 10 0 0 1-20 0v-4Z" stroke="#A855F7" strokeWidth="2" />
+      <circle cx="26" cy="32" r="2" fill="#58A6FF" />
+      <circle cx="38" cy="32" r="2" fill="#58A6FF" />
+      <rect x="28" y="38" width="8" height="2" rx="1" fill="#A855F7" />
+    </svg>
+    <h2 className="text-lg font-semibold text-primary mb-1">No Conversations Yet</h2>
+    <p className="text-sm text-secondary max-w-xs">
+      Start a chat with your friends or contacts to see your conversations here.
+    </p>
+  </div>
+)}
 </div>
 
           </div>

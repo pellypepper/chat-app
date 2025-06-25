@@ -190,7 +190,7 @@ const fetchUserStatuses = useCallback(() => {
   return (
     <div className="flex flex-col h-full min-h-0 max-h-screen">
       <SearchInput value={searchQuery} onChange={setSearchQuery} />
-      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} myFriendsCount={friends.length} />
+      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab}  />
 
       <div className="flex-1 overflow-y-auto scrollbar-auto-hide p-4 space-y-3">
         {loading && <div className="text-center text-gray-400">Loading...</div>}

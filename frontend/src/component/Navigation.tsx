@@ -85,7 +85,7 @@ const Navigation: React.FC<NavigationProps> = ({isOpen, handleClick }) => {
           <ul className="flex flex-col items-center p-4 space-y-4">
             <li>
               <a
-                href="#home"
+                href="/withNavpages"
                 className="text-primary font-medium text-sm hover:text-[#58a6ff] transition transform hover:-translate-y-0.5"
               >
                 Home

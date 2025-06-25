@@ -60,15 +60,16 @@ const Register: React.FC<RegisterProps> = ({ }) => {
   
 
   return (
-    <div id="register" className=''>
+    <div    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }} id="register" className=''>
       <div
-  className="fixed inset-0 z-50 flex items-start justify-center bg-navbar-bg bg-opacity-50 overflow-y-auto"
+       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+  className="fixed inset-0 z-50 flex items-start justify-center bg-navbar-bg bg-opacity-50 overflow-y-auto scrollbar-auto-hide scrrollbar-thin"
 
 >
         <div className="relative mt-25 bg-gradient-feature bg-white p-4 rounded-lg shadow-xl max-w-md w-full mx-4 border border-primary max-h-screen overflow-y-auto">
           {/* Close button */}
           <button
-  
+        onClick={() => router.back()}
             className="absolute top-4 right-4 text-secondary hover:text-gray-700 text-2xl font-bold leading-none"
           >
             X

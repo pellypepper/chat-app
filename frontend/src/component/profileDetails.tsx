@@ -3,6 +3,7 @@ import { useProfileStore } from "@/store/profileStore";
 import { useRouter } from "next/navigation";
 import { useFriendsStore } from "@/store/friendStore";
 import { useChatStore } from "@/store/messageStore";
+import { Camera } from "lucide-react";
 import Image from "next/image";
 
 
@@ -66,7 +67,7 @@ const group = chats.filter((chat) => chat.isGroup);
 
   return (
     <div id="profile">
-      <div className="text-center mb-6 pt-4">
+      <div className="text-center  mb-6 pt-4">
         <h1 className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent text-3xl font-bold mb-2">
           Profile
         </h1>
@@ -75,30 +76,35 @@ const group = chats.filter((chat) => chat.isGroup);
 
       <div className="bg-[#161b22]/80 border border-primary rounded-2xl p-6 mb-4 relative overflow-hidden text-center backdrop-blur-lg">
         <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-purple opacity-10"></div>
-       <div
-      className="w-20 h-20 rounded-full border-4 border-blue-400 mx-auto bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-3xl text-white cursor-pointer overflow-hidden relative z-10"
-      onClick={handleClick}
-    >
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-      />
+ <div
+  className="w-20 h-20 rounded-full border-4 border-blue-400 mx-auto bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-3xl text-white cursor-pointer overflow-hidden relative z-10"
+  onClick={handleClick}
+>
+  <input
+    type="file"
+    accept="image/*"
+    ref={fileInputRef}
+    onChange={handleFileChange}
+    className="hidden"
+  />
 
-      {picture ? (
-        <Image
-          width={80}
-          height={80}
-          src={picture}
-          alt="Profile"
-          className="w-full h-full object-cover"
-        />
-      ) : (
-        initials
-      )}
-    </div>
+  {picture ? (
+    <Image
+      width={80}
+      height={80}
+      src={picture}
+      alt="Profile"
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    initials
+  )}
+
+  {/* Camera Icon Overlay */}
+  <div className="absolute bottom-0 z-[1000] right-1 bg-black/60 rounded-full p-1 flex items-center justify-center ">
+    <Camera className="w-5 h-5 text-white" />
+  </div>
+</div>
         <div className="text-xl font-bold mt-2">{firstName} {lastName}</div>
 
         <div className="flex justify-around pt-4 border-t border-primary">

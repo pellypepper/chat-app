@@ -7,11 +7,12 @@ import { useFriendsStore } from '@/store/friendStore';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import Image from 'next/image';
 import {useSocketContext} from '@/hooks/useSocket';
+import { ArrowLeft } from 'lucide-react';
 
 
 type RightdashboardProps = {
   onBack: () => void;
-handleUpdateOpen: () => void;
+handleUpdateOpen: (chat :Chat) => void;
   chat: Chat | null;
 };
 
@@ -29,7 +30,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, 
   const currentUserId = user?.id;
 
   const { onlineFriends, getUserSeen } = useFriendsStore();
- const { socket, socketConnected } = useSocketContext();
+ const { socket } = useSocketContext();
   
 
   const chatMessages = useMemo(
@@ -142,7 +143,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, 
       setInput('');
       setFile(null);
     } catch (error) {
-
+     
     } finally {
       setSending(false);
     }
@@ -165,14 +166,14 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, 
     }
   };
 
-  const handleInfo = () => {
+  const handleInfo = (chat: Chat) => {
 
-    if(chat?.isGroup){
-      console.log("Group chat info");
-      handleUpdateOpen();
-      console.log("Group chat participants:", chat.participants);
+   
+     
+      handleUpdateOpen(chat);
+  
     }
-  }
+  
 
   const isImageUrl = (url: string) => {
     if (!url || typeof url !== 'string') return false;
@@ -199,11 +200,13 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, 
   return (
     <div className="p-4 ">
       <div className="flex flex-col flex-1 h-screen">
-        {/* Header */}
-        <div className="p-5 border-b border-primary flex items-center justify-between">
+           { chat  ?   
+    ( <div className="flex flex-col flex-1 h-screen">
+         <div className="p-5 border-b border-primary flex items-center justify-between">
+           {/* Header */}
           <div className="flex items-center gap-3">
-            <button onClick={onBack} className="md:hidden text-sm text-primary mb-4">
-              &larr; Back
+            <button onClick={onBack} className="md:hidden text-xs text-primary mb-4">
+                      <ArrowLeft className="w-5 h-5 text-primary " />
             </button>
             <div className="relative w-8 h-8 rounded-full bg-gradient-purple flex items-center justify-center text-primary text-xs font-semibold">
               {chat?.name?.[0] ?? "?"}
@@ -232,18 +235,9 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, 
             </div>
           </div>
           <div className="flex gap-3">
-         {!chat?.isGroup && (
-  <>
-    <button className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary text-secondary hover:text-primary flex items-center justify-center transition">
-      📞
-    </button>
-    <button className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary text-secondary hover:text-primary flex items-center justify-center transition">
-      📹
-    </button>
-  </>
-)}
+  
 
-            <button onClick={handleInfo} className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary  text-secondary hover:text-primary flex items-center justify-center transition">
+            <button onClick={()=>handleInfo(chat)} className="w-10 h-10 rounded-full bg-tertiary-bg hover:bg-primary  text-secondary hover:text-primary flex items-center justify-center transition">
               ℹ️
             </button>
             <button
@@ -432,6 +426,16 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, 
             </button>
           </form>
         </div>
+      </div>) : (<div className="flex flex-col items-center justify-center h-full text-center px-4">
+  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#58a6ff] to-[#a855f7] flex items-center justify-center text-white text-4xl mb-4 shadow-lg">
+    💬
+  </div>
+  <h1 className="text-2xl font-semibold text-gradient-purple mb-2">Select a chat</h1>
+  <p className="text-secondary text-sm max-w-xs">
+    Choose a conversation from the left panel to start messaging.
+  </p>
+</div>
+)}
       </div>
     </div>
   );

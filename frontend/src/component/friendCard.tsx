@@ -44,18 +44,18 @@ const FriendCard: React.FC<FriendCardProps> = ({ user, onMessage, onAdd, onRemov
         <div className="flex flex-col gap-2">
           {isFriend ? (
             <>
-              <button onClick={() => onMessage?.(user.id)} className="px-3 py-1 bg-[#58a6ff] text-primary rounded-lg hover:bg-blue-700 transition-colors text-sm">
+              <button onClick={() => onMessage?.(user.id)} className="px-3 py-1 bg-[#58a6ff] text-primary  rounded-lg hover:bg-blue-700 transition-colors text-xs">
                 Message
               </button>
               {onRemove && (
-                <button onClick={() => onRemove(user.id)} className="px-3 py-1 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors text-sm">
+                <button onClick={() => onRemove(user.id)} className="px-3 py-1 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30 transition-colors text-xs">
                   Remove
                 </button>
               )}
             </>
           ) : (
             onAdd && (
-              <button onClick={() => onAdd(user.id)} className="px-3 py-1 bg-green-600 text-primary rounded-lg hover:bg-green-700 transition-colors text-sm">
+              <button onClick={() => onAdd(user.id)} className="px-3 py-1 bg-green-600 text-primary rounded-lg hover:bg-green-700 transition-colors text-xs">
                 Add Friend
               </button>
             )

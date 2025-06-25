@@ -91,12 +91,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({
       style={{ backgroundColor: 'rgba(13, 17, 23, 0.8)' }}
       onClick={handleClickOutside}
     >
-      <div
-        className="relative w-full bg-navbar-bg border-primary border max-w-md rounded-lg shadow-2xl backdrop-blur-sm"
-      
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Popups */}
+         {/* Popups */}
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 rounded-lg">
             <MultiRingSpinner />
@@ -108,6 +103,12 @@ const CreateGroup: React.FC<CreateGroupProps> = ({
         {showError && (
           <ErrorPopup message={errorMsg || "Error creating group."} />
         )}
+      <div
+        className="relative w-full bg-navbar-bg border-primary border max-w-md rounded-lg shadow-2xl backdrop-blur-sm"
+      
+        onClick={e => e.stopPropagation()}
+      >
+     
 
         <div className="p-6">
           {/* Header with Gradient */}
