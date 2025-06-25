@@ -1,19 +1,19 @@
 import express from 'express';
 import passport from 'passport';
 import './src/config/passport';
-import registerRoutes from './backend/src/routes/register';
-import loginRoutes from './backend/src/routes/login';
-import profileRoutes from './backend/src/routes/profile';
-import storyRoutes from './backend/src/routes/story';
-import friendRoutes from './backend/src/routes/friend';
-import messageRoutes from './backend/src/routes/message';
+import registerRoutes from './src/routes/register';
+import loginRoutes from './src/routes/login';
+import profileRoutes from './src/routes/profile';
+import storyRoutes from './src/routes/story';
+import friendRoutes from './src/routes/friend';
+import messageRoutes from './src/routes/message';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { createServer } from 'http';
-import { initializeSocket } from './backend/src/util/socket';
+import { initializeSocket } from './src/util/socket';
 
 
-import { db } from './backend/src/util/db';
+import { db } from './src/util/db';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
