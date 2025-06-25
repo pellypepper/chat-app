@@ -14,14 +14,14 @@ const Content: React.FC<ContentProps> = ({  }) => {
     
    const handleRegisterClick = () => {
  
-   router.push('/withNavpages/register');
+   router.push('/public/register');
   };
 
     const handleGoogleLogin = async () => {
     try {
       await googleLogin();
       if (isAuthenticated) {
-        router.push('/withNavpages/dashboard');
+        router.push('/public/dashboard');
       }
 
      

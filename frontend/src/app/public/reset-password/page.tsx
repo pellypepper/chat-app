@@ -85,7 +85,7 @@ export default function ResetPasswordModal({ onClose, onSuccess }: ResetPassword
        
                  
         
-              router.push('/withNavpages/signin');
+              router.push('/public/signin');
                      handleClose();
                      
             }, 3000);

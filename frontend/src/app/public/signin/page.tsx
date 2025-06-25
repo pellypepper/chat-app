@@ -42,7 +42,7 @@ const Signin: React.FC = () => {
   const handleGoogleLogin = async () => {
     try {
       await googleLogin();
-      if (isAuthenticated) router.push('/withNavpages/dashboard');
+      if (isAuthenticated) router.push('/dashboard');
     } catch (err) {
       console.error('Google login failed:', err);
     }

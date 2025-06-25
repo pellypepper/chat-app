@@ -8,11 +8,11 @@ const Started = () => {
 
    const handleSigninClick = () => {
    
-  router.push('/withNavpages/signin');
+  router.push('/public/signin');
   };
      const handleRegister = () => {
    
-  router.push('/withNavpages/register');
+  router.push('/public/register');
   };
 
   return (

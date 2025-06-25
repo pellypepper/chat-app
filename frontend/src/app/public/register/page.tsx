@@ -23,7 +23,7 @@ const Register: React.FC<RegisterProps> = ({ }) => {
   
 // Handle navigation to Sign In page
   const handleSigninClick = () => {
-  router.push('/withNavpages/signin');
+  router.push('/public/signin');
   };
 
   // Effect to handle success or error states

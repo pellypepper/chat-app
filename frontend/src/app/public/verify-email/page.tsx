@@ -59,7 +59,7 @@ const VerifyCode: React.FC = () => {
 
     if (!error) {
       setVerificationStatus('success');
-      const timer = setTimeout(() => router.push('/withNavpages/signin'), 3000);
+      const timer = setTimeout(() => router.push('/public/signin'), 3000);
       return () => clearTimeout(timer);
     } else {
       setVerificationStatus('error');
