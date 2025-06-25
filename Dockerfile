@@ -14,12 +14,12 @@ WORKDIR /app
 # Copy backend code and root package.json
 COPY backend ./backend
 COPY package*.json ./
-COPY server.js ./
+COPY server.ts ./
 RUN npm install
 
 # Copy frontend build to a public directory
 COPY --from=frontend /app/frontend/build ./public
-COPY database ./database
+
 
 # Dockerfile
 ARG REACT_APP_API_URL
