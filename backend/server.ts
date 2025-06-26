@@ -1,6 +1,6 @@
 import express from 'express';
 import passport from 'passport';
-import './src/config/passport';
+
 import registerRoutes from './src/routes/register';
 import loginRoutes from './src/routes/login';
 import profileRoutes from './src/routes/profile';
