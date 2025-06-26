@@ -11,38 +11,46 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { createServer } from 'http';
 import { initializeSocket } from './src/util/socket';
-
-
 import { db } from './src/util/db';
 
-const app = express();
+import next from 'next';
+
+const dev = process.env.NODE_ENV !== 'production';
+const nextApp = next({ dev, dir: './frontend' });
+const handle = nextApp.getRequestHandler();
+
 const PORT = process.env.PORT || 4000;
 
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true,
-}));
+nextApp.prepare().then(() => {
+  const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(passport.initialize());
-app.use(cookieParser());
+  app.use(cors({
+    origin: ['http://localhost:3000', 'https://chat-app-tk-blg.fly.dev'],
+    credentials: true,
+  }));
 
-app.use('/register', registerRoutes);
-app.use('/login', loginRoutes);
-app.use('/profile', profileRoutes);
-app.use('/message', messageRoutes);
-app.use('/friend', friendRoutes);
-app.use('/story', storyRoutes);
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+  app.use(passport.initialize());
+  app.use(cookieParser());
 
-// Create HTTP server from Express app
-const httpServer = createServer(app);
+  // API routes
+  app.use('/register', registerRoutes);
+  app.use('/login', loginRoutes);
+  app.use('/profile', profileRoutes);
+  app.use('/message', messageRoutes);
+  app.use('/friend', friendRoutes);
+  app.use('/story', storyRoutes);
 
+  // Serve frontend for all other routes
+  app.all('*', (req, res) => {
+    return handle(req, res);
+  });
 
+  const httpServer = createServer(app);
+  initializeSocket(httpServer);
 
-const io = initializeSocket(httpServer);
-
-// Start the server with HTTP server (not app.listen)
-httpServer.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+  httpServer.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 });
