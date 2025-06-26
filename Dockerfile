@@ -18,8 +18,9 @@ WORKDIR /app
 COPY backend/package*.json ./
 RUN npm install
 
-# Copy backend source code
-COPY backend/ ./
+# Copy backend source code into a subfolder
+COPY backend/ ./backend/
+
 
 # Copy frontend build output from previous stage
 # Next.js build output is in .next and also you need to copy public folder if used by frontend
@@ -30,4 +31,4 @@ COPY --from=frontend /app/frontend/package.json ./package.json
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["node", "server.js"]
+CMD ["node", "backend/server.js"]
