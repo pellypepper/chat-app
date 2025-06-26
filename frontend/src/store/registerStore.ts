@@ -5,7 +5,7 @@ import { devtools } from "zustand/middleware";
 import { User } from "../types/user";
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "http://localhost:4000";
+axios.defaults.baseURL = "https://chat-app-tk-blg.fly.dev";
 
 
 interface AuthState {

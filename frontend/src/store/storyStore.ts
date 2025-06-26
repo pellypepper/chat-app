@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
+
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = "https://chat-app-tk-blg.fly.dev";
+
+
 interface Story {
   id: number;
   content: string;
