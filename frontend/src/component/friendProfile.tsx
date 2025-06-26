@@ -26,14 +26,14 @@ const FriendCard: React.FC<FriendCardProps> = ({ chat, handleClickOutside }) => 
   const { user } = useAuthStore();
   const { fetchFriendDetails } = useFriendsStore();
 
-  const friendId = chat.participants.find((id) => id !== user.id);
+  const friendId = chat.participants.find((id) => id !== user?.id);
 
   useEffect(() => {
     const fetchDetails = async () => {
       if (friendId) {
         try {
           const res = await fetchFriendDetails(friendId);
-          setFriendDetails(res?.friend); // assuming `res.friend` from API
+          setFriendDetails(res); 
         } catch (err) {
           console.error("Failed to fetch friend details", err);
         }

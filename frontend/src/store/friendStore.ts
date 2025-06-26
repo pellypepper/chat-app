@@ -7,9 +7,11 @@ axios.defaults.baseURL = "http://localhost:4000";
 
 interface FriendsState {
   allUsers: User[];
-  friends:  User[];
-  onlineFriends: number[]; 
+  friends: User[];
+  onlineFriends: number[];
   searchResults: User[];
+
+  selectedFriend: User | null; 
 
   loading: boolean;
   error: string | null;
@@ -18,22 +20,23 @@ interface FriendsState {
   fetchOnlineFriends: () => Promise<void>;
   fetchAllUsers: () => Promise<void>;
   searchFriends: (query: string) => Promise<void>;
-  getUserStatus: (userId: number) => Promise<'online' | 'offline'>; 
+  getUserStatus: (userId: number) => Promise<'online' | 'offline'>;
   getUserSeen: (userId: number) => Promise<{ lastSeen: string | null; status: 'online' | 'offline' }>;
   addFriend: (friendId: number) => Promise<void>;
   removeFriend: (friendId: number) => Promise<void>;
   clearSearch: () => void;
 
-  fetchFriendDetails: (friendId: number) => Promise<void>;
+  fetchFriendDetails: (friendId: number) => Promise<User | undefined>; 
   clearSelectedFriend: () => void;
 }
+
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
   allUsers: [],
   friends: [],
   onlineFriends: [],
   searchResults: [],
-
+  selectedFriend: null,
   loading: false,
   error: null,
 
@@ -77,7 +80,9 @@ fetchFriendDetails: async (friendId: number) => {
   set({ loading: true, error: null });
   try {
     const res = await axios.get(`/friend/details/${friendId}`);
-    return res.data;
+ const friend = res.data.friend as User;
+    set({ selectedFriend: friend, loading: false });
+        return friend;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     set({ error: message, loading: false });

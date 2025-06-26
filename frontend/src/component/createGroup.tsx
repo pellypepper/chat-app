@@ -145,12 +145,12 @@ const CreateGroup: React.FC<CreateGroupProps> = ({
                 value={groupName}
                 onChange={e => setGroupName(e.target.value)}
                 placeholder="Enter group name..."
-                className="w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 text-sm"
+                className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-red-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 text-sm"
                 style={{
                   backgroundColor: 'var(--tertiary-bg, #21262d)',
                   borderColor: 'var(--border, #30363d)',
                   color: 'var(--text-primary, #e6edf3)',
-                  focusRingColor: 'var(--gradient-blue, #58a6ff)'
+             
                 }}
                 onFocus={e => {
                   e.target.style.borderColor = 'var(--gradient-blue, #58a6ff)';

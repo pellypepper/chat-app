@@ -60,7 +60,7 @@ const SigninForm: React.FC<Props> = ({
       onClick={onGoogleLogin}
       className="w-full px-8 py-4 flex items-center justify-center gap-2 border rounded-xl font-medium text-sm"
     >
-      <FcGoogle size={24} /> Continue with Google
+{FcGoogle({ style: { fontSize: 24 } })} Continue with Google
     </button>
 
     <div className="text-center mt-5">
