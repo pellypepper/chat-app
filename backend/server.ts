@@ -28,7 +28,6 @@ const nextApp = next({
   conf: {
     reactStrictMode: true,
     swcMinify: true,
-    output: 'standalone'
   }
 });
 
