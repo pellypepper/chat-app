@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import passport from 'passport';
 import './src/config/passport';
@@ -14,6 +17,7 @@ import { initializeSocket } from './src/util/socket';
 import next from 'next';
 import path from 'path';
 import type { Request, Response, NextFunction } from 'express';
+
 
 const dev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 8080;
