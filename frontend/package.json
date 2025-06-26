@@ -7,9 +7,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "build": "react-scripts build",
-    "start": "react-scripts start",
-    "test": "react-scripts test"
+     "dev": "next dev",
+  "build": "next build",
+  "start": "next start"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",
