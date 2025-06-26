@@ -31,4 +31,5 @@ COPY --from=frontend /app/frontend/package.json ./package.json
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["node", "backend/server.js"]
+
+CMD ["npx", "ts-node", "backend/server.ts"]
