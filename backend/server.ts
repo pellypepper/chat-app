@@ -19,7 +19,7 @@ const dev = process.env.NODE_ENV !== 'production';
 const nextApp = next({ dev, dir: './frontend' });
 const handle = nextApp.getRequestHandler();
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8080;
 
 nextApp.prepare().then(() => {
   const app = express();
