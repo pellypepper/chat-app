@@ -47,7 +47,7 @@ const Content: React.FC<ContentProps> = ({  }) => {
 
     <div className="flex justify-center gap-4 flex-wrap">
       <a  onClick={ handleRegisterClick} className="p-2   bg-gradient-purple font-medium text-sm px-8 py-4 rounded-xl">Get Started Free</a>
-      <a onClick={handleGoogleLogin} className=" px-8 py-4   flex items-center gap-2 border font-medium text-sm rounded-xl"><FcGoogle size={24} />Contine with Google</a>
+      <a onClick={handleGoogleLogin} className=" px-8 py-4   flex items-center gap-2 border font-medium text-sm rounded-xl">{FcGoogle({ style: { fontSize: 24 } })}Contine with Google</a>
     </div>
   </div>
 </section>
