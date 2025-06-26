@@ -15,7 +15,6 @@ import next from 'next';
 import path from 'path';
 import type { Request, Response, NextFunction } from 'express';
 
-
 const dev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 8080;
 
@@ -62,12 +61,12 @@ nextApp.prepare().then(() => {
     return handle(req, res);
   });
 
+  // Error handler middleware - properly typed
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error('Internal server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
 
-
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Internal server error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
   const httpServer = createServer(app);
   initializeSocket(httpServer);
 
