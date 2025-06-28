@@ -1,191 +1,85 @@
-// Fixed TypeScript version - addresses all compilation errors
 import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import passport from 'passport';
+import './src/config/passport';
+import registerRoutes from './src/routes/register';
+import loginRoutes from './src/routes/login';
+import profileRoutes from './src/routes/profile';
+import storyRoutes from './src/routes/story';
+import friendRoutes from './src/routes/friend';
+import messageRoutes from './src/routes/message';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { createServer } from 'http';
+import { initializeSocket } from './src/util/socket';
+import next from 'next';
+import path from 'path';
 import type { Request, Response, NextFunction } from 'express';
 
-console.log('🚀 Starting server debug...');
-console.log('📍 PORT:', process.env.PORT || 8080);
-console.log('📍 NODE_ENV:', process.env.NODE_ENV);
 
 const dev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 8080;
 
-const app = express();
-
-// Basic middleware first
-app.use(cors({
-  origin: ['http://localhost:3000', 'https://chat-app-tk-blg.fly.dev'],
-  credentials: true,
-}));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-// Health check - keep this working
-app.get('/health', (req, res) => {
-  console.log('🏥 Health check');
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    step: 'basic-server'
-  });
+const nextApp = next({ 
+  dev, 
+  dir: path.join(process.cwd(), '../frontend'),
+  conf: {
+    reactStrictMode: true,
+    swcMinify: true,
+  }
 });
 
-// Test route
-app.get('/', (req, res) => {
-  res.json({ message: 'Debug server is running!', step: 'basic-server' });
-});
+const handle = nextApp.getRequestHandler();
 
-// STEP 2: Try to add passport (comment out if this breaks)
-try {
-  console.log('📦 Loading passport...');
-  const passport = require('passport');
-  require('./src/config/passport');
+nextApp.prepare().then(() => {
+  const app = express();
+
+  app.use(cors({
+    origin: ['http://localhost:3000', 'https://chat-app-tk-blg.fly.dev'],
+    credentials: true,
+  }));
+
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
   app.use(passport.initialize());
-  console.log('✅ Passport loaded successfully');
-} catch (error) {
-  console.error('❌ Passport failed:', (error as Error).message);
-  console.log('⚠️  Continuing without passport...');
-}
+  app.use(cookieParser());
 
-// STEP 3: Try to add routes one by one (comment out problematic ones)
-const routes = [
-  { path: '/api/register', module: './src/routes/register', name: 'register' },
-  { path: '/api/login', module: './src/routes/login', name: 'login' },
-  { path: '/api/profile', module: './src/routes/profile', name: 'profile' },
-  { path: '/api/message', module: './src/routes/message', name: 'message' },
-  { path: '/api/friend', module: './src/routes/friend', name: 'friend' },
-  { path: '/api/story', module: './src/routes/story', name: 'story' }
-];
+  // API routes
+  app.use('/api/register', registerRoutes);
+  app.use('/api/login', loginRoutes);
+  app.use('/api/profile', profileRoutes);
+  app.use('/api/message', messageRoutes);
+  app.use('/api/friend', friendRoutes);
+  app.use('/api/story', storyRoutes);
 
-routes.forEach(route => {
-  try {
-    console.log(`📦 Loading ${route.name} routes...`);
-    const routeModule = require(route.module);
-    app.use(route.path, routeModule.default || routeModule);
-    console.log(`✅ ${route.name} routes loaded`);
-  } catch (error) {
-    console.error(`❌ ${route.name} routes failed:`, (error as Error).message);
-    console.log(`⚠️  Continuing without ${route.name} routes...`);
-  }
-});
-
-// STEP 4: Try to add socket (comment out if this breaks)
-let httpServer;
-try {
-  console.log('📦 Loading socket...');
-  const { initializeSocket } = require('./src/util/socket');
-  httpServer = createServer(app);
-  initializeSocket(httpServer);
-  console.log('✅ Socket loaded successfully');
-} catch (error) {
-  console.error('❌ Socket failed:', (error as Error).message);
-  console.log('⚠️  Using basic HTTP server...');
-  httpServer = createServer(app);
-}
-
-// STEP 5: Try to add Next.js (comment out if this breaks)
-async function setupNextJS() {
-  try {
-    console.log('📦 Loading Next.js...');
-    const next = require('next');
-    const path = require('path');
-    
-    const frontendPath = path.join(process.cwd(), '../frontend');
-    console.log('📁 Frontend path:', frontendPath);
-    
-    // Check if frontend directory exists
-    const fs = require('fs');
-    if (!fs.existsSync(frontendPath)) {
-      throw new Error(`Frontend directory does not exist: ${frontendPath}`);
-    }
-    
-    const nextApp = next({ 
-      dev, 
-      dir: frontendPath,
-      conf: {
-        reactStrictMode: true,
-        swcMinify: true,
-      }
-    });
-
-    await nextApp.prepare();
-    const handle = nextApp.getRequestHandler();
-
-    // Add Next.js handler AFTER API routes - Fixed callback signature
-    app.all('*', (req: Request, res: Response) => {
-      // Skip API routes
-      if (req.path.startsWith('/api/') || req.path === '/health') {
-        return res.status(404).json({ error: 'API route not found' });
-      }
-      return handle(req, res);
-    });
-
-    console.log('✅ Next.js loaded successfully');
-  } catch (error) {
-    console.error('❌ Next.js failed:', (error as Error).message);
-    console.log('⚠️  Adding fallback routes...');
-    
-    // Fallback for when Next.js fails
-    app.get('*', (req, res) => {
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API route not found' });
-      }
-      res.json({ 
-        message: 'Frontend not available', 
-        path: req.path,
-        note: 'Next.js failed to load'
-      });
-    });
-  }
-}
-
-// Error handler middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('💥 Internal server error:', err);
-  res.status(500).json({ 
-    error: 'Internal server error', 
-    message: err.message 
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
   });
-});
 
-// Start the server
-async function startServer() {
-  try {
-    // Setup Next.js if possible
-    await setupNextJS();
-    
-    httpServer.listen(Number(PORT), '0.0.0.0', () => {
-      console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
-      console.log(`🔧 Development mode: ${dev}`);
-      console.log('✅ Server startup complete');
-    });
-  } catch (error) {
-    console.error('❌ Error starting server:', (error as Error).message);
-    process.exit(1);
-  }
-}
+  // Serve Next.js frontend
+  app.all('*', (req, res) => {
+    return handle(req, res);
+  });
 
-// Handle shutdown gracefully
-process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
+  // Error handler middleware - properly typed
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error('Internal server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  });
 
-process.on('uncaughtException', (error) => {
-  console.error('💥 Uncaught Exception:', error);
+  const httpServer = createServer(app);
+  initializeSocket(httpServer);
+
+  httpServer.listen(Number(PORT), '0.0.0.0', () => {
+    console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+    console.log(`📁 Frontend directory: ${path.join(process.cwd(), '../frontend')}`);
+    console.log(`🔧 Development mode: ${dev}`);
+  });
+
+}).catch((err) => {
+  console.error('❌ Error starting server:', err);
   process.exit(1);
 });
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
-
-startServer();
