@@ -1,35 +1,35 @@
-# Build frontend
-FROM node:20 AS frontend
-WORKDIR /app/frontend
+# Use Node.js 18 LTS
+FROM node:18-alpine
 
-# Copy frontend package files first (better caching)
-COPY frontend/package*.json ./
-RUN npm install
-
-# Copy frontend source and build
-COPY frontend/ ./
-RUN npm run build
-
-# Build backend
-FROM node:18 AS backend
+# Set working directory
 WORKDIR /app
 
-# Copy backend package files and install dependencies
-COPY backend/package*.json ./
-RUN npm install
+# Copy package files for both frontend and backend
+COPY frontend/package*.json ./frontend/
+COPY backend/package*.json ./backend/
+COPY package*.json ./
 
-# Copy backend source code into a subfolder
+# Install all dependencies
+RUN npm install
+RUN cd frontend && npm install
+RUN cd backend && npm install
+
+# Copy source code
+COPY frontend/ ./frontend/
 COPY backend/ ./backend/
 
+# Copy next.config.js to frontend directory (where it belongs)
+COPY frontend/next.config.js ./frontend/
 
-# Copy frontend build output from previous stage
-# Next.js build output is in .next and also you need to copy public folder if used by frontend
-COPY --from=frontend /app/frontend/.next ./.next
-COPY --from=frontend /app/frontend/public ./public
-COPY --from=frontend /app/frontend/package.json ./package.json
+# Build the frontend
+WORKDIR /app/frontend
+RUN npm run build
 
-ENV PORT=8080
+# Go back to app root
+WORKDIR /app
+
+# Expose port
 EXPOSE 8080
 
-
+# Start the backend server (which serves the frontend)
 CMD ["npx", "ts-node", "backend/server.ts"]
