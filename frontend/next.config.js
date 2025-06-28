@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
+ 
   // Remove output: standalone since you're using Next.js programmatically
   // output: 'standalone', // REMOVE THIS LINE
   

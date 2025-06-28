@@ -34,8 +34,5 @@ RUN npm install -g concurrently
 
 # Set environment variable for production
 ENV NODE_ENV=production
-
-# Start both backend and Next.js standalone frontend
-CMD concurrently \
-  "node frontend/.next/standalone/server.js" \
-  "npx ts-node backend/server.ts"
+# Start the backend server
+CMD ["npx", "ts-node", "backend/server.ts"]
