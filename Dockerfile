@@ -35,4 +35,4 @@ RUN npm install -g concurrently
 # Set environment variable for production
 ENV NODE_ENV=production
 # Start the backend server
-CMD ["npx", "ts-node", "backend/server.ts"]
+CMD ["node", "backend/dist/server.js"]
