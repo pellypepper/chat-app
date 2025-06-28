@@ -1,85 +1,32 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 import express from 'express';
-import passport from 'passport';
-import './src/config/passport';
-import registerRoutes from './src/routes/register';
-import loginRoutes from './src/routes/login';
-import profileRoutes from './src/routes/profile';
-import storyRoutes from './src/routes/story';
-import friendRoutes from './src/routes/friend';
-import messageRoutes from './src/routes/message';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import { createServer } from 'http';
-import { initializeSocket } from './src/util/socket';
-import next from 'next';
-import path from 'path';
-import type { Request, Response, NextFunction } from 'express';
 
-
-const dev = process.env.NODE_ENV !== 'production';
+const app = express();
 const PORT = process.env.PORT || 8080;
 
-const nextApp = next({ 
-  dev, 
-  dir: path.join(process.cwd(), '../frontend'),
-  conf: {
-    reactStrictMode: true,
-    swcMinify: true,
-  }
+console.log('🚀 Starting minimal server...');
+console.log('📍 PORT:', PORT);
+console.log('📍 NODE_ENV:', process.env.NODE_ENV);
+
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  console.log('🏥 Health check');
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    message: 'Minimal server is running!'
+  });
 });
 
-const handle = nextApp.getRequestHandler();
+app.get('/', (req, res) => {
+  res.json({ message: 'Hello from Fly.io!' });
+});
 
-nextApp.prepare().then(() => {
-  const app = express();
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`✅ Server listening on 0.0.0.0:${PORT}`);
+});
 
-  app.use(cors({
-    origin: ['http://localhost:3000', 'https://chat-app-tk-blg.fly.dev'],
-    credentials: true,
-  }));
-
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
-  app.use(passport.initialize());
-  app.use(cookieParser());
-
-  // API routes
-  app.use('/api/register', registerRoutes);
-  app.use('/api/login', loginRoutes);
-  app.use('/api/profile', profileRoutes);
-  app.use('/api/message', messageRoutes);
-  app.use('/api/friend', friendRoutes);
-  app.use('/api/story', storyRoutes);
-
-  // Health check endpoint
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
-  });
-
-  // Serve Next.js frontend
-  app.all('*', (req, res) => {
-    return handle(req, res);
-  });
-
-  // Error handler middleware - properly typed
-  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error('Internal server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  });
-
-  const httpServer = createServer(app);
-  initializeSocket(httpServer);
-
-  httpServer.listen(Number(PORT), '0.0.0.0', () => {
-    console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
-    console.log(`📁 Frontend directory: ${path.join(process.cwd(), '../frontend')}`);
-    console.log(`🔧 Development mode: ${dev}`);
-  });
-
-}).catch((err) => {
-  console.error('❌ Error starting server:', err);
-  process.exit(1);
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully');
+  process.exit(0);
 });
