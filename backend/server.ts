@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import passport from 'passport';
-require('./src/config/passport'); // Fixed: added parentheses
+require('./src/config/passport');
 import session from 'express-session';
 import registerRoutes from './src/routes/register';
 import loginRoutes from './src/routes/login';
@@ -22,9 +22,10 @@ import type { Request, Response, NextFunction } from 'express';
 const dev = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 8080;
 
+// In Docker, the built frontend is in the same directory as backend
 const nextApp = next({ 
-  dev, 
-  dir: process.env.FRONTEND_DIR || path.join(process.cwd(), '../frontend'),
+  dev: false, // Always false in production Docker container
+  dir: process.cwd(), // Use current directory where .next folder exists
   conf: {
     reactStrictMode: true,
     swcMinify: true,
@@ -32,6 +33,11 @@ const nextApp = next({
 });
 
 const handle = nextApp.getRequestHandler();
+
+console.log('🔍 Debug info:');
+console.log('Current working directory:', process.cwd());
+console.log('Looking for .next directory at:', path.join(process.cwd(), '.next'));
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
 nextApp.prepare().then(() => {
   const app = express();
@@ -45,7 +51,7 @@ nextApp.prepare().then(() => {
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
 
-  // Session configuration (required for Passport)
+  // Session configuration
   app.use(session({
     secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-in-production',
     resave: false,
@@ -69,10 +75,15 @@ nextApp.prepare().then(() => {
 
   // Health check endpoint
   app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+    res.status(200).json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      cwd: process.cwd(),
+      nodeEnv: process.env.NODE_ENV
+    });
   });
 
-  // Serve Next.js frontend (this should be second to last)
+  // Serve Next.js frontend
   app.all('*', (req, res) => {
     return handle(req, res);
   });
@@ -88,11 +99,12 @@ nextApp.prepare().then(() => {
 
   httpServer.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
-    console.log(`📁 Frontend directory: ${process.env.FRONTEND_DIR || path.join(process.cwd(), '../frontend')}`);
+    console.log(`📁 Serving from directory: ${process.cwd()}`);
     console.log(`🔧 Development mode: ${dev}`);
   });
 
 }).catch((err) => {
   console.error('❌ Error starting server:', err);
+  console.error('Make sure .next directory exists in:', process.cwd());
   process.exit(1);
 });
