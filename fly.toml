@@ -1,12 +1,11 @@
+[env]
+PORT = "8080"
+
 [[services]]
-  http_checks = []
   internal_port = 8080
-  processes = ["app"]
   protocol = "tcp"
-  script_checks = []
 
   [[services.ports]]
-    force_https = true
     handlers = ["http"]
     port = 80
 

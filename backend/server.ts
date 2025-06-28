@@ -1,4 +1,4 @@
-// Step 1: Start with working minimal server and add pieces gradually
+// Fixed TypeScript version - addresses all compilation errors
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -50,7 +50,7 @@ try {
   app.use(passport.initialize());
   console.log('✅ Passport loaded successfully');
 } catch (error) {
-  console.error('❌ Passport failed:', error.message);
+  console.error('❌ Passport failed:', (error as Error).message);
   console.log('⚠️  Continuing without passport...');
 }
 
@@ -71,7 +71,7 @@ routes.forEach(route => {
     app.use(route.path, routeModule.default || routeModule);
     console.log(`✅ ${route.name} routes loaded`);
   } catch (error) {
-    console.error(`❌ ${route.name} routes failed:`, error.message);
+    console.error(`❌ ${route.name} routes failed:`, (error as Error).message);
     console.log(`⚠️  Continuing without ${route.name} routes...`);
   }
 });
@@ -85,7 +85,7 @@ try {
   initializeSocket(httpServer);
   console.log('✅ Socket loaded successfully');
 } catch (error) {
-  console.error('❌ Socket failed:', error.message);
+  console.error('❌ Socket failed:', (error as Error).message);
   console.log('⚠️  Using basic HTTP server...');
   httpServer = createServer(app);
 }
@@ -118,8 +118,8 @@ async function setupNextJS() {
     await nextApp.prepare();
     const handle = nextApp.getRequestHandler();
 
-    // Add Next.js handler AFTER API routes
-    app.all('*', (req, res) => {
+    // Add Next.js handler AFTER API routes - Fixed callback signature
+    app.all('*', (req: Request, res: Response) => {
       // Skip API routes
       if (req.path.startsWith('/api/') || req.path === '/health') {
         return res.status(404).json({ error: 'API route not found' });
@@ -129,7 +129,7 @@ async function setupNextJS() {
 
     console.log('✅ Next.js loaded successfully');
   } catch (error) {
-    console.error('❌ Next.js failed:', error.message);
+    console.error('❌ Next.js failed:', (error as Error).message);
     console.log('⚠️  Adding fallback routes...');
     
     // Fallback for when Next.js fails
@@ -167,7 +167,7 @@ async function startServer() {
       console.log('✅ Server startup complete');
     });
   } catch (error) {
-    console.error('❌ Error starting server:', error);
+    console.error('❌ Error starting server:', (error as Error).message);
     process.exit(1);
   }
 }
