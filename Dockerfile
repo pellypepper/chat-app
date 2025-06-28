@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
-# Install dependencies
+# Install root, frontend, and backend dependencies
 RUN npm install
 RUN cd frontend && npm install
 RUN cd backend && npm install
@@ -21,26 +21,21 @@ COPY backend/ ./backend/
 # Build the frontend (this creates the .next directory)
 WORKDIR /app/frontend
 
-# Debug: Show what's in the frontend directory before build
-RUN echo "📁 Contents of frontend directory before build:" && ls -la
-
-# Run the build with verbose output
 RUN npm run build
 
-# Debug: Show what's in the frontend directory after build
-RUN echo "📁 Contents of frontend directory after build:" && ls -la
-
-# Verify the build was successful
-RUN ls -la .next || (echo "❌ .next directory not found after build!" && exit 1)
-
-# Show .next contents
-RUN echo "📁 Contents of .next directory:" && ls -la .next
-
-# Go back to app root
+# Move to app root
 WORKDIR /app
 
 # Expose port
 EXPOSE 8080
 
-# Start the backend server
-CMD ["npx", "ts-node", "backend/server.ts"]
+# Install a process manager to run both servers (frontend+backend)
+RUN npm install -g concurrently
+
+# Set environment variable for production
+ENV NODE_ENV=production
+
+# Start both backend and Next.js standalone frontend
+CMD concurrently \
+  "node frontend/.next/standalone/server.js" \
+  "npx ts-node backend/server.ts"

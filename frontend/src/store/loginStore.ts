@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthState>()(
 
 getSession: async () => {
       try {
-        const res = await axios.get("http://localhost:4000/login/user", {
+        const res = await axios.get("/login/user", {
           withCredentials: true,
         });
         const user = res.data.user;
@@ -73,7 +73,7 @@ getSession: async () => {
 
     googleLogin: () => {
       // Redirects user to Google login page
-      window.location.href = "http://localhost:4000/login/google";
+      window.location.href = "login/google";
     },
 
     logout: async () => {
