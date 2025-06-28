@@ -26,10 +26,7 @@ const PORT = process.env.PORT || 8080;
 const nextApp = next({    
   dev: false, // Always false in production Docker container   
   dir: path.join(process.cwd(), 'frontend'), // Point to frontend directory
-  conf: {     
-    reactStrictMode: true,     
-    swcMinify: true,   
-  } 
+  // Don't override config here - let it read from next.config.js
 });  
 
 const handle = nextApp.getRequestHandler();  
