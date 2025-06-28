@@ -3,6 +3,7 @@
     "@aws-sdk/lib-storage": "^3.821.0",
     "aws-sdk": "^2.1692.0",
     "bcrypt": "^6.0.0",
+    "connect-redis": "^9.0.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.43.1",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/connect-redis": "^0.0.23",
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.2",
     "@types/express-session": "^1.18.2",
@@ -44,6 +46,7 @@
     "typescript": "^5.8.3"
   },
   "scripts": {
-    "dev": "ts-node-dev server.ts"
+    "dev": "ts-node-dev server.ts",
+    "build": "tsc"
   }
 }

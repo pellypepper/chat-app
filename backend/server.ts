@@ -4,7 +4,7 @@ dotenv.config();
 import express from 'express';
 import passport from 'passport';
 require('./src/config/passport');
-import session from 'express-session';
+// import session from 'express-session';
 import registerRoutes from './src/routes/register';
 import loginRoutes from './src/routes/login';
 import profileRoutes from './src/routes/profile';
@@ -65,19 +65,19 @@ nextApp.prepare().then(() => {
     app.use(express.urlencoded({ extended: true }));
     app.use(cookieParser());
     
-    // Session configuration
-    app.use(session({
-        secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-in-production',
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
-        }
-    }));
+    // // Session configuration
+    // app.use(session({
+    //     secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-in-production',
+    //     resave: false,
+    //     saveUninitialized: false,
+    //     cookie: {
+    //         secure: process.env.NODE_ENV === 'production',
+    //         maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    //     }
+    // }));
     
     app.use(passport.initialize());
-    app.use(passport.session());
+    // app.use(passport.session());
     
     // API routes
     app.use('/api/register', registerRoutes);

@@ -8,7 +8,7 @@ dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const passport_1 = __importDefault(require("passport"));
 require('./src/config/passport');
-const express_session_1 = __importDefault(require("express-session"));
+// import session from 'express-session';
 const register_1 = __importDefault(require("./src/routes/register"));
 const login_1 = __importDefault(require("./src/routes/login"));
 const profile_1 = __importDefault(require("./src/routes/profile"));
@@ -59,18 +59,18 @@ nextApp.prepare().then(() => {
     app.use(express_1.default.json());
     app.use(express_1.default.urlencoded({ extended: true }));
     app.use((0, cookie_parser_1.default)());
-    // Session configuration
-    app.use((0, express_session_1.default)({
-        secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-in-production',
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
-        }
-    }));
+    // // Session configuration
+    // app.use(session({
+    //     secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-in-production',
+    //     resave: false,
+    //     saveUninitialized: false,
+    //     cookie: {
+    //         secure: process.env.NODE_ENV === 'production',
+    //         maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    //     }
+    // }));
     app.use(passport_1.default.initialize());
-    app.use(passport_1.default.session());
+    // app.use(passport.session());
     // API routes
     app.use('/api/register', register_1.default);
     app.use('/api/login', login_1.default);
