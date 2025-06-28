@@ -1,0 +1,13 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico",
+  "/change-password/page": "/change-password",
+  "/page": "/",
+  "/dashboard/page": "/dashboard",
+  "/public/page": "/public",
+  "/public/reset-password/page": "/public/reset-password",
+  "/public/forget-password/page": "/public/forget-password",
+  "/public/signin/page": "/public/signin",
+  "/public/verify-email/page": "/public/verify-email",
+  "/public/register/page": "/public/register"
+}

@@ -1,4 +1,4 @@
-// File: C:\Users\ppeli\Documents\chat-app\frontend\src\app\public\register\page.tsx
+// File: /Users/touchbar/Documents/GitHub/chat-app/frontend/src/app/public/register/page.tsx
 import * as entry from '../../../../../src/app/public/register/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
