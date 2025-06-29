@@ -31,7 +31,7 @@ import { initializeSocket } from './src/util/socket';
 import path from 'path';
 import fs from 'fs';
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 const app = express();
 
