@@ -13,6 +13,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.0",
     "multer-s3": "^3.0.1",
+    "mysql2": "^3.14.1",
     "next": "^15.3.4",
     "nodemailer": "^7.0.3",
     "passport": "^0.7.0",
@@ -46,7 +47,7 @@
     "typescript": "^5.8.3"
   },
   "scripts": {
-        "start": "node dist/server.js",
+    "start": "node dist/server.js",
     "dev": "ts-node-dev server.ts",
     "build": "tsc"
   }

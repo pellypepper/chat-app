@@ -1,13 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const auth_1 = require("../middleware/auth");
-const storyController_1 = require("../controller/storyController");
-const upload_1 = require("../middleware/upload");
-const router = express_1.default.Router();
+var express_1 = require("express");
+var auth_1 = require("../middleware/auth");
+var storyController_1 = require("../controller/storyController");
+var upload_1 = require("../middleware/upload");
+var router = express_1.default.Router();
 router.post('/upload', auth_1.authenticateAccessToken, upload_1.upload.single('image'), storyController_1.uploadStory);
 router.get('/friends', auth_1.authenticateAccessToken, storyController_1.getFriendsStories);
 router.get('/', auth_1.authenticateAccessToken, storyController_1.getMyStories);

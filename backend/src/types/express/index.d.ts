@@ -1,6 +1,7 @@
 // src/types/express/index.d.ts
 
-import {User} from '../../model/schema';
+import {users} from '../../model/schema';
+import { User } from '../type';
 
 
 declare namespace Express {

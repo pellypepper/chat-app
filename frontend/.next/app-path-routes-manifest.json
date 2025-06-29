@@ -4,10 +4,10 @@
   "/change-password/page": "/change-password",
   "/page": "/",
   "/dashboard/page": "/dashboard",
-  "/public/page": "/public",
-  "/public/signin/page": "/public/signin",
   "/public/reset-password/page": "/public/reset-password",
   "/public/forget-password/page": "/public/forget-password",
+  "/public/page": "/public",
   "/public/verify-email/page": "/public/verify-email",
+  "/public/signin/page": "/public/signin",
   "/public/register/page": "/public/register"
 }

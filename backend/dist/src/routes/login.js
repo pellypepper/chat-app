@@ -1,12 +1,9 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const loginController_1 = require("../controller/loginController");
-const auth_1 = require("../middleware/auth");
-const router = express_1.default.Router();
+var express_1 = require("express");
+var loginController_1 = require("../controller/loginController");
+var auth_1 = require("../middleware/auth");
+var router = express_1.default.Router();
 // Login route
 router.post("/", loginController_1.login);
 // Google login route

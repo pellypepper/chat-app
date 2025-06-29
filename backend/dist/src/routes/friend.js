@@ -1,13 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 // src/routes/friends.ts
-const express_1 = __importDefault(require("express"));
-const auth_1 = require("../middleware/auth");
-const friendController_1 = require("../controller/friendController");
-const router = express_1.default.Router();
+var express_1 = require("express");
+var auth_1 = require("../middleware/auth");
+var friendController_1 = require("../controller/friendController");
+var router = express_1.default.Router();
 //Get all users
 router.get('/all', auth_1.authenticateAccessToken, friendController_1.allUsers);
 // Add a friend

@@ -4,10 +4,10 @@
   "/change-password/page": "app/change-password/page.js",
   "/page": "app/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/public/page": "app/public/page.js",
   "/public/reset-password/page": "app/public/reset-password/page.js",
   "/public/forget-password/page": "app/public/forget-password/page.js",
-  "/public/signin/page": "app/public/signin/page.js",
+  "/public/page": "app/public/page.js",
   "/public/verify-email/page": "app/public/verify-email/page.js",
+  "/public/signin/page": "app/public/signin/page.js",
   "/public/register/page": "app/public/register/page.js"
 }

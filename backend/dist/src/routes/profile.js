@@ -1,13 +1,10 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const auth_1 = require("../middleware/auth");
-const profileController_1 = require("../controller/profileController");
-const express_1 = __importDefault(require("express"));
-const upload_1 = require("../middleware/upload");
-const router = express_1.default.Router();
+var auth_1 = require("../middleware/auth");
+var profileController_1 = require("../controller/profileController");
+var express_1 = require("express");
+var upload_1 = require("../middleware/upload");
+var router = express_1.default.Router();
 router.get('/', auth_1.authenticateAccessToken, profileController_1.getProfile);
 // Update user profile
 router.put('/', auth_1.authenticateAccessToken, profileController_1.updateProfile);
