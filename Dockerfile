@@ -9,30 +9,34 @@ COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
-# Install root, frontend, and backend dependencies
+# Install dependencies
 RUN npm install
-RUN cd frontend && npm install
-RUN cd backend && npm install
+RUN cd frontend && npm ci --only=production
+RUN cd backend && npm ci --only=production
 
 # Copy source code
 COPY frontend/ ./frontend/
 COPY backend/ ./backend/
 
-# Build the frontend (this creates the .next directory)
-WORKDIR /app/frontend
-
+# Build the backend TypeScript
+WORKDIR /app/backend
 RUN npm run build
 
-# Move to app root
+# Build the frontend (this creates the .next directory)
+WORKDIR /app/frontend
+RUN npm run build
+
+# Verify .next directory was created
+RUN ls -la .next/ || echo "❌ .next directory not found!"
+
+# Move back to app root
 WORKDIR /app
 
 # Expose port
 EXPOSE 8080
 
-# Install a process manager to run both servers (frontend+backend)
-RUN npm install -g concurrently
-
 # Set environment variable for production
 ENV NODE_ENV=production
-# Start the backend server
+
+# Start the backend server (which should serve the frontend)
 CMD ["node", "backend/dist/server.js"]
