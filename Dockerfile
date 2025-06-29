@@ -9,10 +9,10 @@ COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
-# Install dependencies
+# Install dependencies (including dev dependencies for build)
 RUN npm install
-RUN cd frontend && npm ci --only=production
-RUN cd backend && npm ci --only=production
+RUN cd frontend && npm ci
+RUN cd backend && npm ci
 
 # Copy source code
 COPY frontend/ ./frontend/
@@ -22,12 +22,18 @@ COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN npm run build
 
+# Clean up dev dependencies after build
+RUN npm prune --production
+
 # Build the frontend (this creates the .next directory)
 WORKDIR /app/frontend
 RUN npm run build
 
 # Verify .next directory was created
 RUN ls -la .next/ || echo "❌ .next directory not found!"
+
+# Clean up dev dependencies after build
+RUN npm prune --production
 
 # Move back to app root
 WORKDIR /app
