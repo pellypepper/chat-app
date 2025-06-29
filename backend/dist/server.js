@@ -58,12 +58,16 @@ app.use((0, cookie_parser_1.default)());
 app.use(passport_1.default.initialize());
 // app.use(passport.session());
 // API routes
-app.use('/api/register', register_1.default);
-app.use('/api/login', login_1.default);
-app.use('/api/profile', profile_1.default);
-app.use('/api/message', message_1.default);
-app.use('/api/friend', friend_1.default);
-app.use('/api/story', story_1.default);
+app.use('/register', register_1.default);
+app.use('/login', login_1.default);
+app.use('/profile', profile_1.default);
+app.use('/message', message_1.default);
+app.use('/friend', friend_1.default);
+app.use('/story', story_1.default);
+console.log('registerRoutes:', register_1.default);
+console.log('loginRoutes:', login_1.default);
+console.log('profileRoutes', profile_1.default);
+console.log('messageRoutes', message_1.default);
 // Serve static files from Next.js build
 app.use('/_next/static', express_1.default.static(path_1.default.join(__dirname, '../../frontend/.next/static')));
 app.use('/static', express_1.default.static(path_1.default.join(__dirname, '../../frontend/.next/static')));
@@ -115,16 +119,21 @@ const serveFrontend = (req, res) => {
         }
     }
 };
-// Define specific frontend routes
-const frontendRoutes = ['/', '/profile', '/chat', '/login', '/register', '/dashboard'];
+const frontendRoutes = ['/public', '/dashboard', '/change-password', '/public/forget-password', '/public/register', '/public/reset-password', "/public/signin", "/public/verify-email"];
 frontendRoutes.forEach(route => {
     app.get(route, serveFrontend);
 });
-// Handle all other non-API routes (catch-all for SPA routing)
-app.get(/^(?!\/api).*/, serveFrontend);
-// Handle 404 for API routes
+// Handle 404 for API routes first
 app.use('/api/*', (req, res) => {
     res.status(404).json({ error: 'API endpoint not found' });
+});
+// Handle all other routes (catch-all for SPA routing) - SIMPLIFIED
+app.get('*', (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
+    serveFrontend(req, res);
 });
 // Error handler middleware - must be last
 app.use((err, req, res, next) => {
