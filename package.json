@@ -33,10 +33,14 @@
     "clean": "tsc --build --clean"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.16",
+    "@types/passport-local": "^1.0.38",
+    "@types/pg": "^8.15.4",
     "ts-node-dev": "^2.0.0"
   }
 }

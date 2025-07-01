@@ -15,6 +15,7 @@ passport.use(new LocalStrategy({
   async (email, password, done) => {
     try {
         const user = await db.select().from(users).where(eq(users.email, email));
+        
         if (!user[0]) {
             return done(null, false, { message: 'Email not found.' });
         }
