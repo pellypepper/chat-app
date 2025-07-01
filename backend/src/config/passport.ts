@@ -1,4 +1,4 @@
-const passport = require('passport');
+import * as passport from 'passport';
 import bcrypt from 'bcrypt'
 import { db } from "../util/db";
 import { eq } from 'drizzle-orm';

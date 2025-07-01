@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { sendEmail } from "../util/email";
 import geoip from 'geoip-lite';
-import passport from 'passport';
+import * as passport from 'passport';
 import { generateAccessToken, generateRefreshToken } from '../middleware/auth';
 import jwt from 'jsonwebtoken';
 import { findUserById } from '../model/userModel'; 

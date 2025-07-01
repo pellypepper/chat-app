@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import next from 'next';
 import express, { Request, Response, NextFunction } from 'express';
-const passport = require('passport');
+import * as passport from 'passport';
 require('./backend/src/config/passport');
 // import session from 'express-session';
 
