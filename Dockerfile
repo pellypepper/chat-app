@@ -32,4 +32,4 @@ WORKDIR /app
 EXPOSE 8080
 
 # Start the server
-CMD ["node", "backend/dist/server.js"]
+CMD ["node", "dist/server.js"]
