@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { sendEmail } from "../util/email";
 import geoip from 'geoip-lite';
-import * as passport from 'passport';
+// Option 1: CommonJS require style (works everywhere in Node)
+const passport = require('passport');
 import { generateAccessToken, generateRefreshToken } from '../middleware/auth';
 import jwt from 'jsonwebtoken';
 import { findUserById } from '../model/userModel'; 
@@ -85,7 +86,7 @@ export const googleLogin = passport.authenticate('google', {
 
 // Google login callback 
 export const googleLoginCallback = (req: Request, res: Response, next: NextFunction) => {
-  passport.authenticate('google', { session: false }, (err, user, info) => {
+  passport.authenticate('google', { session: false }, (err: any, user: any, info: any) => {
     if (err) return res.status(500).json({ message: 'Google login error', error: err });
     if (!user) return res.status(401).json({ message: info?.message || 'Google login failed' });
 

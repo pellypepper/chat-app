@@ -1,4 +1,5 @@
-import * as passport from 'passport';
+// Option 1: CommonJS require style (works everywhere in Node)
+const passport = require('passport');
 import bcrypt from 'bcrypt'
 import { db } from "../util/db";
 import { eq } from 'drizzle-orm';
