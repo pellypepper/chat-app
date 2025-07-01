@@ -101,7 +101,7 @@ export const useStoryStore = create<StoryStore>((set) => ({
 
   markViewed: async (storyId: number) => {
     try {
-      await axios.post(`/story/view/${storyId}`);
+      await axios.post(`/story/create/${storyId}`);
 
     } catch (error) {
       console.error('Failed to mark as viewed', error);
