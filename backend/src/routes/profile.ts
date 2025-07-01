@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/', authenticateAccessToken, getProfile);
 
 // Update user profile
-router.put('/', authenticateAccessToken, updateProfile);
+router.put('/update', authenticateAccessToken, updateProfile);
 
 // Change user password
 router.put('/change-password', authenticateAccessToken, changePassword);
