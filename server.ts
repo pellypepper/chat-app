@@ -21,10 +21,36 @@ import fs from 'fs';
 
 const PORT = process.env.PORT || 8080;
 
-
 const dev = process.env.NODE_ENV !== 'production';
 const nextApp = next({ dev, dir: path.join(__dirname, './frontend') });
 const handle = nextApp.getRequestHandler();
+
+function printRouterPaths(label: string, router: any) {
+    if (router?.stack) {
+        try {
+            const paths = router.stack
+                .filter((layer: any) => {
+                    // Check for both route layers and router layers
+                    return (layer.route && layer.route.path) || (layer.regexp && layer.keys);
+                })
+                .map((layer: any) => {
+                    if (layer.route) {
+                        return layer.route.path;
+                    } else if (layer.regexp) {
+                        // For router layers, try to extract the path
+                        return layer.regexp.source || 'unknown';
+                    }
+                    return 'unknown';
+                });
+            console.log(`[DEBUG] ${label} registered paths:`, paths);
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error(`[ERROR] Failed to process ${label}:`, errorMessage);
+        }
+    } else {
+        console.log(`[DEBUG] ${label} has no stack or is not a router.`);
+    }
+}
 
 nextApp.prepare().then(() => {
     const app = express();
@@ -32,12 +58,12 @@ nextApp.prepare().then(() => {
     // Debug info
     console.log('🔍 Debug info:');
     console.log('Current working directory:', process.cwd());
-    console.log('Frontend directory:', path.join(__dirname, '../../frontend'));
-    console.log('Looking for .next directory at:', path.join(__dirname, '../../frontend/.next'));
+    console.log('Frontend directory:', path.join(__dirname, './frontend'));
+    console.log('Looking for .next directory at:', path.join(__dirname, './frontend/.next'));
     console.log('NODE_ENV:', process.env.NODE_ENV);
 
     // Check if .next directory exists
-    const nextDir = path.join(__dirname, '../../frontend/.next');
+    const nextDir = path.join(__dirname, './frontend/.next');
     if (fs.existsSync(nextDir)) {
         console.log('✅ .next directory found');
     } else {
@@ -68,17 +94,43 @@ nextApp.prepare().then(() => {
     app.use(passport.initialize());
     // app.use(passport.session());
 
-    // API routes
-    app.use('/register', registerRoutes);
-    app.use('/login', loginRoutes);
-    app.use('/profile', profileRoutes);
-    app.use('/message', messageRoutes);
-    app.use('/friend', friendRoutes);
-    app.use('/story', storyRoutes);
+    // Register routes with error handling
+    try {
+        console.log('Registering routes...');
+        app.use('/register', registerRoutes);
+        console.log('✅ Register routes loaded');
+        
+        app.use('/login', loginRoutes);
+        console.log('✅ Login routes loaded');
+        
+        app.use('/profile', profileRoutes);
+        console.log('✅ Profile routes loaded');
+        
+        app.use('/message', messageRoutes);
+        console.log('✅ Message routes loaded');
+        
+        app.use('/friend', friendRoutes);
+        console.log('✅ Friend routes loaded');
+        
+        app.use('/story', storyRoutes);
+        console.log('✅ Story routes loaded');
+        
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('❌ Error registering routes:', errorMessage);
+    }
+
+    // Debug routes after registration (uncomment if needed)
+    // printRouterPaths('registerRoutes', registerRoutes);
+    // printRouterPaths('loginRoutes', loginRoutes);
+    // printRouterPaths('profileRoutes', profileRoutes);
+    // printRouterPaths('messageRoutes', messageRoutes);
+    // printRouterPaths('friendRoutes', friendRoutes);
+    // printRouterPaths('storyRoutes', storyRoutes);
 
     // Serve static files from Next.js build and public
-    app.use('/_next/static', express.static(path.join(__dirname, '../../frontend/.next/static')));
-    app.use(express.static(path.join(__dirname, '../../frontend/public')));
+    app.use('/_next/static', express.static(path.join(__dirname, './frontend/.next/static')));
+    app.use(express.static(path.join(__dirname, './frontend/public')));
 
     // Health check endpoint
     app.get('/health', (req, res) => {
@@ -86,10 +138,9 @@ nextApp.prepare().then(() => {
     });
 
     // All other routes handled by Next.js
-    app.all('*', (req, res) => {
-        return handle(req, res);
-    });
-
+  app.use((req, res) => {
+    return handle(req, res);
+});
     // Error handler middleware - must be last
     app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
         console.error('❌ Error starting server:', err);
