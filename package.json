@@ -26,7 +26,11 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "ts-node-dev --ignore-watch frontend/.next server.ts",
-    "build": "tsc"
+
+      "build": "tsc --build",
+    "build:backend": "tsc --build backend",
+    "build:frontend": "cd frontend && npm run build",
+    "clean": "tsc --build --clean"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.9",
