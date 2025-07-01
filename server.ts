@@ -23,7 +23,7 @@ import fs from 'fs';
 const PORT = process.env.PORT || 8080;
 
 const dev = process.env.NODE_ENV !== 'production';
-const nextApp = next({ dev, dir: path.join(__dirname, './frontend') });
+const nextApp = next({ dev, dir: path.join(process.cwd(), 'frontend') });
 const handle = nextApp.getRequestHandler();
 
 function printRouterPaths(label: string, router: any) {
@@ -59,12 +59,12 @@ nextApp.prepare().then(() => {
     // Debug info
     console.log('🔍 Debug info:');
     console.log('Current working directory:', process.cwd());
-    console.log('Frontend directory:', path.join(__dirname, './frontend'));
-    console.log('Looking for .next directory at:', path.join(__dirname, './frontend/.next'));
+    console.log('Frontend directory:', path.join(process.cwd(), 'frontend'));
+    console.log('Looking for .next directory at:', path.join(process.cwd(), 'frontend/.next'));
     console.log('NODE_ENV:', process.env.NODE_ENV);
-
+    
     // Check if .next directory exists
-    const nextDir = path.join(__dirname, './frontend/.next');
+    const nextDir = path.join(process.cwd(), 'frontend/.next');
     if (fs.existsSync(nextDir)) {
         console.log('✅ .next directory found');
     } else {
