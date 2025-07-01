@@ -36,7 +36,7 @@ const Navigation: React.FC<NavigationProps> = ({isOpen, handleClick }) => {
             backgroundClip: 'text',
           }}
         >
-         <Link href="/withNavpages">  ChatApp</Link>
+         <Link href="/public">  ChatApp</Link>
         </h2>
 
         {/* Mobile menu button */}
