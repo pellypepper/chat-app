@@ -13,7 +13,7 @@ const Navigation: React.FC<NavigationProps> = ({isOpen, handleClick }) => {
   const router = useRouter();
   const handleSigninClick = () => {
    
-  router.push('/withNavpages/signin');
+  router.push('/public/signin');
   };
 
   const handleMenuClick = () => {

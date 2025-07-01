@@ -66,8 +66,8 @@ const Signin: React.FC = () => {
           onPasswordChange={setPassword}
           onSubmit={handleSubmit}
           onGoogleLogin={handleGoogleLogin}
-          onForgotPassword={() => router.push('/withNavpages/forget-password')}
-          onRegisterClick={() => router.push('/withNavpages/register')}
+          onForgotPassword={() => router.push('/public/forget-password')}
+          onRegisterClick={() => router.push('/public/register')}
         />
       </div>
 
