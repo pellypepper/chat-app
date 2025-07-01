@@ -26,7 +26,9 @@ WORKDIR /app/backend
 RUN npm run build
 
 # Set working directory back to root
+# Build the root server (after backend)
 WORKDIR /app
+RUN npm run build
 
 # Expose port
 EXPOSE 8080
