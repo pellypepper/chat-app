@@ -113,7 +113,7 @@ export const googleLoginCallback = (req: Request, res: Response, next: NextFunct
     // Remove sensitive info from user object
     const { password, ...userSafe } = user;
 
-res.redirect('http://localhost:3000/dashboard');
+res.redirect('https://chat-app-tk-blg.fly.dev/dashboard');
 
 
   })(req, res, next);
