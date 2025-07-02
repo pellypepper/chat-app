@@ -4,7 +4,11 @@ import next from 'next';
 import express, { Request, Response, NextFunction } from 'express';
 
 const passport = require('passport');
-import "../backend/dist/config/passport";
+try {
+    require("../backend/dist/config/passport");
+  } catch {
+    require("../backend/src/config/passport");
+  }
 // import session from 'express-session';
 
 import registerRoutes from './backend/src/routes/register';
@@ -130,9 +134,9 @@ nextApp.prepare().then(() => {
     // printRouterPaths('storyRoutes', storyRoutes);
 
     // Serve static files from Next.js build and public
-    app.use('/_next/static', express.static(path.join(__dirname, './frontend/.next/static')));
-    app.use(express.static(path.join(__dirname, './frontend/public')));
-
+    app.use('/_next/static', express.static(path.join(process.cwd(), 'frontend/.next/static')));
+    app.use(express.static(path.join(process.cwd(), 'frontend/public')));
+    
     // Health check endpoint
     app.get('/health', (req, res) => {
         res.json({ status: 'OK', timestamp: new Date().toISOString() });
