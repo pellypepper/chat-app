@@ -21,64 +21,16 @@ try {
 
 
 function safeImportRoute(route: string) {
-  const possiblePaths = [
-    // When running from dist/server.js
-    `./backend/src/routes/${route}`,
-    `./backend/src/routes/${route}.js`,
-    // When running from root in development
-    `../backend/src/routes/${route}`,
-    `../backend/src/routes/${route}.js`,
-    // Absolute path resolution
-    path.join(process.cwd(), 'dist/backend/src/routes', route),
-    path.join(process.cwd(), 'dist/backend/src/routes', `${route}.js`),
-    path.join(process.cwd(), 'backend/src/routes', route),
-    path.join(process.cwd(), 'backend/src/routes', `${route}.js`),
-  ];
-
-  console.log(`🔍 Looking for route '${route}' in:`, possiblePaths);
-
-  for (const routePath of possiblePaths) {
-    try {
-      // Check if file exists first
-      if (routePath.startsWith('./') || routePath.startsWith('../')) {
-        // For relative paths, try requiring directly
-        const module = require(routePath);
-        console.log(`✅ Successfully imported route '${route}' from: ${routePath}`);
-        return module.default || module;
-      } else {
-        // For absolute paths, check existence first
-        if (fs.existsSync(routePath)) {
-          const module = require(routePath);
-          console.log(`✅ Successfully imported route '${route}' from: ${routePath}`);
-          return module.default || module;
-        }
-      }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.log(`❌ Failed to import from ${routePath}:`, errorMsg);
-      continue;
-    }
+  const routePath = path.join(process.cwd(), 'backend/src/routes', route);
+  
+  try {
+    const module = require(routePath);
+    console.log(`✅ Successfully imported route '${route}' from: ${routePath}`);
+    return module.default || module;
+  } catch (error) {
+    console.error(`❌ Failed to import route '${route}' from ${routePath}:`, error.message);
+    throw new Error(`Cannot find route module '${route}' at ${routePath}`);
   }
-
-  throw new Error(`Cannot find route module '${route}' in any of the expected locations`);
-}
-
-// Also add a debug function to list available files
-function debugRouteFiles() {
-  const searchDirs = [
-    path.join(process.cwd(), 'dist/backend/src/routes'),
-    path.join(process.cwd(), 'backend/src/routes'),
-  ];
-
-  console.log('🔍 Debug: Available route files:');
-  searchDirs.forEach(dir => {
-    if (fs.existsSync(dir)) {
-      const files = fs.readdirSync(dir);
-      console.log(`📁 ${dir}:`, files);
-    } else {
-      console.log(`📁 ${dir}: Directory not found`);
-    }
-  });
 }
 
 const PORT = process.env.PORT || 8080;
@@ -117,7 +69,7 @@ nextApp.prepare().then(() => {
     // app.use(session({ ... })); // Uncomment and configure if using sessions
     app.use(passport.initialize());
     // app.use(passport.session());
-debugRouteFiles();
+
     // Register routes
     try {
         app.use('/register', safeImportRoute('register'));

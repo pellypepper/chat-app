@@ -5,6 +5,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "strict": true,
+    "outDir": "./dist",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
@@ -13,6 +14,10 @@
     "declaration": false,
     "sourceMap": true
   },
+  "include": [
+    "server.ts",
+    "backend/src/**/*"
+  ],
   "files": [],
   "references": [
     { "path": "./frontend" },

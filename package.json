@@ -26,10 +26,11 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "ts-node-dev --ignore-watch frontend/.next server.ts",
-    "build": "tsc --build",
-    "build:backend": "tsc --build backend",
+    "build": "tsc",
+    "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "clean": "tsc --build --clean"
+    "build:all": "npm run build:backend && npm run build:frontend && npm run build"
+ 
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
