@@ -75,7 +75,7 @@ getSession: async () => {
     googleLogin: () => {
       console.log("Redirecting to Google login");
       // Redirects user to Google login page
-      window.location.href = "login/google";
+      window.location.href = "/login/google";
       console.log("Redirected to Google login");
     },
 

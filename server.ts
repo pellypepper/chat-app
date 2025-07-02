@@ -80,7 +80,7 @@ nextApp.prepare().then(() => {
 
     // Serve static files from Next.js build and public
     app.use('/_next/static', express.static(path.join(process.cwd(), 'frontend/.next/static')));
-    app.use(express.static(path.join(process.cwd(), 'frontend')));
+    app.use(express.static(path.join(process.cwd(), 'frontend/public')));
     
     // Health check endpoint
     app.get('/health', (req, res) => {
