@@ -39,7 +39,7 @@ const handleLogout = async () => {
 
     // Redirect after 2 seconds without waiting for click
     setTimeout(() => {
-      router.push('/withNavpages');
+      router.push('/public');
     }, 2000);
   } catch  {
     setShowError(true);
