@@ -21,19 +21,20 @@ try {
 
 
 function safeImportRoute(route: string) {
-  const routePath = path.join(process.cwd(), 'backend/src/routes', route);
-  
   try {
-    const module = require(routePath);
-    console.log(`✅ Successfully imported route '${route}' from: ${routePath}`);
-    return module.default || module;
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(`❌ Failed to import route '${route}' from ${routePath}:`, error.message);
-    } else {
-      console.error(`❌ Failed to import route '${route}' from ${routePath}:`, error);
+    // Try production build first (dist in root directory)
+    return require(`./dist/backend/src/routes/${route}`).default;
+  } catch (prodError) {
+    try {
+      // Fall back to development source
+      return require(`./backend/src/routes/${route}`).default;
+    } catch (devError) {
+      console.error(`❌ Failed to import route '${route}':`, {
+        production: prodError instanceof Error ? prodError.message : String(prodError),
+        development: devError instanceof Error ? devError.message : String(devError)
+      });
+      throw new Error(`Cannot find route module '${route}'`);
     }
-    throw new Error(`Cannot find route module '${route}' at ${routePath}`);
   }
 }
 
