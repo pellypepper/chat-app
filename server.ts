@@ -13,7 +13,7 @@ const passport = require('passport');
 
 // Import passport config (dist for prod, src for dev)
 try {
-  require("./backend/dist/config/passport");
+  require("../backend/dist/config/passport");
 } catch {
   require("./backend/src/config/passport");
 }
