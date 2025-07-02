@@ -52,7 +52,7 @@ nextApp.prepare().then(() => {
     }
 
     app.use(cors({
-        origin: ['http://localhost:3000', 'https://chat-app-tk-blg.fly.dev'],
+        origin: [ 'https://chat-app-tk-blg.fly.dev'],
         credentials: true,
     }));
 

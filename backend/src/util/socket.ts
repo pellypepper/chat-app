@@ -10,7 +10,7 @@ const lastSeenMap = new Map<number, Date>();
 export function initializeSocket(server: HTTPServer) {
   io = new Server(server, {
     cors: {
-      origin: 'http://localhost:3000',
+      origin: 'https://chat-app-tk-blg.fly.dev',
       methods: ['GET', 'POST'],
           credentials: true,
     },
