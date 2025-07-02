@@ -60,7 +60,7 @@ nextApp.prepare().then(() => {
     app.use(express.urlencoded({ extended: true }));
     app.use(cookieParser());
 
-    // app.use(session({ ... })); // uncomment and configure if using sessions
+    // app.use(session({ ... })); // Uncomment and configure if using sessions
     app.use(passport.initialize());
     // app.use(passport.session());
 
