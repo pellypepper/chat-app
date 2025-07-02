@@ -13,31 +13,43 @@ const passport = require('passport');
 
 // Import passport config (dist for prod, src for dev)
 try {
-  require("../backend/dist/config/passport");
+  require("./backend/dist/config/passport");
 } catch {
   require("./backend/src/config/passport");
 }
 
 // Helper for route imports (dist for prod, src for dev)
 function safeImportRoute(route: string) {
+  const rootDir = process.cwd();
+  
   try {
-    // In production, routes are compiled to backend/dist/routes/
-    return require(`./backend/dist/routes/${route}`).default;
+    // Try compiled routes first (with absolute path)
+    const distPath = path.join(rootDir, 'backend', 'dist', 'routes', route);
+    return require(distPath).default;
   } catch (distError) {
     try {
-      // Fallback to source files for development
-      return require(`./backend/src/routes/${route}`).default;
-    } catch (srcError) {
-      // If both fail, try without .default (CommonJS exports)
+      // Try compiled routes without .default
+      const distPath = path.join(rootDir, 'backend', 'dist', 'routes', route);
+      return require(distPath);
+    } catch (distError2) {
       try {
-        return require(`./backend/dist/routes/${route}`);
-      } catch (cjsError) {
-        console.error(`Failed to import route '${route}':`, {
-          distError: distError instanceof Error ? distError.message : distError,
-          srcError: srcError instanceof Error ? srcError.message : srcError,
-          cjsError: cjsError instanceof Error ? cjsError.message : cjsError
-        });
-        throw new Error(`Cannot load route: ${route}`);
+        // Fallback to source files for development
+        const srcPath = path.join(rootDir, 'backend', 'src', 'routes', route);
+        return require(srcPath).default;
+      } catch (srcError) {
+        try {
+          // Try source files without .default
+          const srcPath = path.join(rootDir, 'backend', 'src', 'routes', route);
+          return require(srcPath);
+        } catch (srcError2) {
+          console.error(`Failed to import route '${route}':`, {
+            distError: distError instanceof Error ? distError.message : distError,
+            distError2: distError2 instanceof Error ? distError2.message : distError2,
+            srcError: srcError instanceof Error ? srcError.message : srcError,
+            srcError2: srcError2 instanceof Error ? srcError2.message : srcError2
+          });
+          throw new Error(`Cannot load route: ${route}`);
+        }
       }
     }
   }
