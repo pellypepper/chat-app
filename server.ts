@@ -54,7 +54,8 @@ function safeImportRoute(route: string) {
         }
       }
     } catch (error) {
-      console.log(`❌ Failed to import from ${routePath}:`, error.message);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.log(`❌ Failed to import from ${routePath}:`, errorMsg);
       continue;
     }
   }
