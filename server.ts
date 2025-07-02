@@ -18,12 +18,23 @@ try {
   require("./backend/src/config/passport");
 }
 
-// Helper for route imports (dist for prod, src for dev)
+
+
 function safeImportRoute(route: string) {
   try {
-    return require(`../backend/dist/routes/${route}`).default;
-  } catch {
-    return require(`./backend/src/routes/${route}`).default;
+    // Try production build first (dist in root directory)
+    return require(`./dist/backend/routes/${route}`).default;
+  } catch (prodError) {
+    try {
+      // Fall back to development source
+      return require(`./backend/src/routes/${route}`).default;
+    } catch (devError) {
+      console.error(`❌ Failed to import route '${route}':`, {
+        production: prodError.message,
+        development: devError.message
+      });
+      throw new Error(`Cannot find route module '${route}'`);
+    }
   }
 }
 
