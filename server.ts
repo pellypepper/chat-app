@@ -23,7 +23,7 @@ try {
 function safeImportRoute(route: string) {
   try {
     // Try production build first (dist in root directory)
-    return require(`./dist/backend/routes/${route}`).default;
+    return require(`./dist/backend/src/routes/${route}`).default;
   } catch (prodError) {
     try {
       // Fall back to development source
