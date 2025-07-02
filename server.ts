@@ -13,45 +13,17 @@ const passport = require('passport');
 
 // Import passport config (dist for prod, src for dev)
 try {
-  require("./backend/dist/config/passport");
+  require("../backend/dist/config/passport");
 } catch {
   require("./backend/src/config/passport");
 }
 
 // Helper for route imports (dist for prod, src for dev)
 function safeImportRoute(route: string) {
-  const rootDir = process.cwd();
-  
   try {
-    // Try compiled routes first (with absolute path)
-    const distPath = path.join(rootDir, 'backend', 'dist', 'routes', route);
-    return require(distPath).default;
-  } catch (distError) {
-    try {
-      // Try compiled routes without .default
-      const distPath = path.join(rootDir, 'backend', 'dist', 'routes', route);
-      return require(distPath);
-    } catch (distError2) {
-      try {
-        // Fallback to source files for development
-        const srcPath = path.join(rootDir, 'backend', 'src', 'routes', route);
-        return require(srcPath).default;
-      } catch (srcError) {
-        try {
-          // Try source files without .default
-          const srcPath = path.join(rootDir, 'backend', 'src', 'routes', route);
-          return require(srcPath);
-        } catch (srcError2) {
-          console.error(`Failed to import route '${route}':`, {
-            distError: distError instanceof Error ? distError.message : distError,
-            distError2: distError2 instanceof Error ? distError2.message : distError2,
-            srcError: srcError instanceof Error ? srcError.message : srcError,
-            srcError2: srcError2 instanceof Error ? srcError2.message : srcError2
-          });
-          throw new Error(`Cannot load route: ${route}`);
-        }
-      }
-    }
+    return require(`./backend/dist/routes/${route}`).default;
+  } catch {
+    return require(`./backend/src/routes/${route}`).default;
   }
 }
 
@@ -70,20 +42,6 @@ nextApp.prepare().then(() => {
     console.log('Looking for .next directory at:', path.join(process.cwd(), 'frontend/.next'));
     console.log('NODE_ENV:', process.env.NODE_ENV);
     
-    // Check backend directories
-    const backendDistDir = path.join(process.cwd(), 'backend/dist');
-    const backendSrcDir = path.join(process.cwd(), 'backend/src');
-    console.log('Backend dist directory exists:', fs.existsSync(backendDistDir));
-    console.log('Backend src directory exists:', fs.existsSync(backendSrcDir));
-    
-    if (fs.existsSync(backendDistDir)) {
-        const routesDir = path.join(backendDistDir, 'routes');
-        console.log('Routes dist directory exists:', fs.existsSync(routesDir));
-        if (fs.existsSync(routesDir)) {
-            console.log('Route files in dist:', fs.readdirSync(routesDir));
-        }
-    }
-        
     // Check if .next directory exists
     const nextDir = path.join(process.cwd(), 'frontend/.next');
     if (fs.existsSync(nextDir)) {
@@ -123,7 +81,7 @@ nextApp.prepare().then(() => {
     // Serve static files from Next.js build and public
     app.use('/_next/static', express.static(path.join(process.cwd(), 'frontend/.next/static')));
     app.use(express.static(path.join(process.cwd(), 'frontend/public')));
-        
+    
     // Health check endpoint
     app.get('/health', (req, res) => {
         res.json({ status: 'OK', timestamp: new Date().toISOString() });
