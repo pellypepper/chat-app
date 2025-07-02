@@ -21,7 +21,7 @@ try {
 // Helper for route imports (dist for prod, src for dev)
 function safeImportRoute(route: string) {
   try {
-    return require(`./backend/dist/routes/${route}`).default;
+    return require(`../backend/dist/routes/${route}`).default;
   } catch {
     return require(`./backend/src/routes/${route}`).default;
   }
