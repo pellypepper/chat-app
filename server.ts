@@ -18,23 +18,12 @@ try {
   require("./backend/src/config/passport");
 }
 
-
-
+// Helper for route imports (dist for prod, src for dev)
 function safeImportRoute(route: string) {
   try {
-    // Try production build first (dist in root directory)
-    return require(`./dist/backend/src/routes/${route}`).default;
-  } catch (prodError) {
-    try {
-      // Fall back to development source
-      return require(`./backend/src/routes/${route}`).default;
-    } catch (devError) {
-      console.error(`❌ Failed to import route '${route}':`, {
-        production: prodError instanceof Error ? prodError.message : String(prodError),
-        development: devError instanceof Error ? devError.message : String(devError)
-      });
-      throw new Error(`Cannot find route module '${route}'`);
-    }
+    return require(`../backend/dist/routes/${route}`).default;
+  } catch {
+    return require(`./backend/src/routes/${route}`).default;
   }
 }
 
@@ -63,7 +52,7 @@ nextApp.prepare().then(() => {
     }
 
     app.use(cors({
-        origin: [ 'https://chat-app-tk-blg.fly.dev'],
+        origin: [ 'https://chat-app-tk-blg.fly.dev', 'http://localhost:8080'],
         credentials: true,
     }));
 
