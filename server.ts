@@ -30,8 +30,8 @@ function safeImportRoute(route: string) {
       return require(`./backend/src/routes/${route}`).default;
     } catch (devError) {
       console.error(`❌ Failed to import route '${route}':`, {
-        production: prodError.message,
-        development: devError.message
+        production: prodError instanceof Error ? prodError.message : String(prodError),
+        development: devError instanceof Error ? devError.message : String(devError)
       });
       throw new Error(`Cannot find route module '${route}'`);
     }
