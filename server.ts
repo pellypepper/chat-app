@@ -2,21 +2,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 import next from 'next';
 import express, { Request, Response, NextFunction } from 'express';
-
-const passport = require('passport');
-try {
-    require("../backend/dist/config/passport");
-  } catch {
-    require("../backend/src/config/passport");
-  }
-// import session from 'express-session';
-
-import registerRoutes from './backend/src/routes/register';
-import loginRoutes from './backend/src/routes/login';
-import profileRoutes from './backend/src/routes/profile';
-import storyRoutes from './backend/src/routes/story';
-import friendRoutes from './backend/src/routes/friend';
-import messageRoutes from './backend/src/routes/message';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { createServer } from 'http';
@@ -24,38 +9,28 @@ import { initializeSocket } from './backend/src/util/socket';
 import path from 'path';
 import fs from 'fs';
 
-const PORT = process.env.PORT || 8080;
+const passport = require('passport');
 
+// Import passport config (dist for prod, src for dev)
+try {
+  require("../backend/dist/config/passport");
+} catch {
+  require("./backend/src/config/passport");
+}
+
+// Helper for route imports (dist for prod, src for dev)
+function safeImportRoute(route: string) {
+  try {
+    return require(`./backend/dist/routes/${route}`).default;
+  } catch {
+    return require(`./backend/src/routes/${route}`).default;
+  }
+}
+
+const PORT = process.env.PORT || 8080;
 const dev = process.env.NODE_ENV !== 'production';
 const nextApp = next({ dev, dir: path.join(process.cwd(), 'frontend') });
 const handle = nextApp.getRequestHandler();
-
-function printRouterPaths(label: string, router: any) {
-    if (router?.stack) {
-        try {
-            const paths = router.stack
-                .filter((layer: any) => {
-                    // Check for both route layers and router layers
-                    return (layer.route && layer.route.path) || (layer.regexp && layer.keys);
-                })
-                .map((layer: any) => {
-                    if (layer.route) {
-                        return layer.route.path;
-                    } else if (layer.regexp) {
-                        // For router layers, try to extract the path
-                        return layer.regexp.source || 'unknown';
-                    }
-                    return 'unknown';
-                });
-            console.log(`[DEBUG] ${label} registered paths:`, paths);
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error(`[ERROR] Failed to process ${label}:`, errorMessage);
-        }
-    } else {
-        console.log(`[DEBUG] ${label} has no stack or is not a router.`);
-    }
-}
 
 nextApp.prepare().then(() => {
     const app = express();
@@ -85,53 +60,23 @@ nextApp.prepare().then(() => {
     app.use(express.urlencoded({ extended: true }));
     app.use(cookieParser());
 
-    // // Session configuration
-    // app.use(session({
-    //     secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-in-production',
-    //     resave: false,
-    //     saveUninitialized: false,
-    //     cookie: {
-    //         secure: process.env.NODE_ENV === 'production',
-    //         maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    //     }
-    // }));
-
+    // app.use(session({ ... })); // uncomment and configure if using sessions
     app.use(passport.initialize());
     // app.use(passport.session());
 
-    // Register routes with error handling
+    // Register routes
     try {
-        console.log('Registering routes...');
-        app.use('/register', registerRoutes);
-        console.log('✅ Register routes loaded');
-        
-        app.use('/login', loginRoutes);
-        console.log('✅ Login routes loaded');
-        
-        app.use('/profile', profileRoutes);
-        console.log('✅ Profile routes loaded');
-        
-        app.use('/message', messageRoutes);
-        console.log('✅ Message routes loaded');
-        
-        app.use('/friend', friendRoutes);
-        console.log('✅ Friend routes loaded');
-        
-        app.use('/story', storyRoutes);
-        console.log('✅ Story routes loaded');
-        
+        app.use('/register', safeImportRoute('register'));
+        app.use('/login', safeImportRoute('login'));
+        app.use('/profile', safeImportRoute('profile'));
+        app.use('/message', safeImportRoute('message'));
+        app.use('/friend', safeImportRoute('friend'));
+        app.use('/story', safeImportRoute('story'));
+        console.log('✅ All routes loaded');
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error('❌ Error registering routes:', errorMessage);
     }
-
-    // Debug routes after registration (uncomment if needed)
-    // printRouterPaths('registerRoutes', registerRoutes);
-    // printRouterPaths('loginRoutes', loginRoutes);
-    // printRouterPaths('profileRoutes', profileRoutes);
-    // printRouterPaths('messageRoutes', messageRoutes);
-    // printRouterPaths('friendRoutes', friendRoutes);
-    // printRouterPaths('storyRoutes', storyRoutes);
 
     // Serve static files from Next.js build and public
     app.use('/_next/static', express.static(path.join(process.cwd(), 'frontend/.next/static')));
@@ -143,9 +88,8 @@ nextApp.prepare().then(() => {
     });
 
     // All other routes handled by Next.js
-  app.use((req, res) => {
-    return handle(req, res);
-});
+    app.use((req, res) => handle(req, res));
+
     // Error handler middleware - must be last
     app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
         console.error('❌ Error starting server:', err);
