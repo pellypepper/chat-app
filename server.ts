@@ -28,7 +28,11 @@ function safeImportRoute(route: string) {
     console.log(`✅ Successfully imported route '${route}' from: ${routePath}`);
     return module.default || module;
   } catch (error) {
-    console.error(`❌ Failed to import route '${route}' from ${routePath}:`, error.message);
+    if (error instanceof Error) {
+      console.error(`❌ Failed to import route '${route}' from ${routePath}:`, error.message);
+    } else {
+      console.error(`❌ Failed to import route '${route}' from ${routePath}:`, error);
+    }
     throw new Error(`Cannot find route module '${route}' at ${routePath}`);
   }
 }
