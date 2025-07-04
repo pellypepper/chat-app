@@ -24,6 +24,10 @@ primary_region = "lhr"
   protocol = "http"
   timeout = "10s"
 
+[mounts]
+  source = "data"
+  destination = "/data"
+
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
