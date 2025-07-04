@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   trailingSlash: false,
   generateBuildId: () => 'build',
   distDir: '.next',
@@ -12,6 +13,9 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  experimental: {
+    outputFileTracingRoot: process.cwd(),
   },
 };
 
