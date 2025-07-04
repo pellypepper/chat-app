@@ -8,7 +8,7 @@ const router = express.Router();
 router.post('/upload', authenticateAccessToken, upload.single('image'), uploadStory);
 router.get('/friends', authenticateAccessToken, getFriendsStories);
 router.get('/', authenticateAccessToken, getMyStories);
-router.post('/view/:storyId', authenticateAccessToken, markStoryViewed);  // ✅ Fixed: view makes sense for marking as viewed
+router.post('/view/:storyId', authenticateAccessToken, markStoryViewed);  
 router.get('/view/user/:storyId', authenticateAccessToken, getStoryViews);
 router.delete('/:storyId',  authenticateAccessToken, deleteStory);
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, googleLogin, googleLoginCallback, getCurrentUser , logout } from '../controller/loginController';
+import { login, googleLogin, googleLoginCallback, getCurrentUser ,refreshAccessToken, logout } from '../controller/loginController';
 import { authenticateAccessToken } from '../middleware/auth';   
 
 const router = express.Router();
@@ -12,7 +12,7 @@ router.get("/google", googleLogin);
 
 router.get('/user',  authenticateAccessToken , getCurrentUser); 
 
-router.post('/refresh', authenticateAccessToken, getCurrentUser);
+router.post('/refresh', authenticateAccessToken, refreshAccessToken);
 
 // Google callback
 router.get("/google/callback", googleLoginCallback);

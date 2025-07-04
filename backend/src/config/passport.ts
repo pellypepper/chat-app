@@ -39,7 +39,7 @@ passport.use(new GoogleStrategy(
   {
     clientID: process.env.GOOGLE_CLIENT_ID || '565670844158-3icfobcp29hpj9i5tof5s6ncg2v36s0o.apps.googleusercontent.com',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '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',
-    callbackURL: 'https://chat-app-tk-blg.fly.dev/login/google/callback',
+    callbackURL: 'http://localhost:8080/login/google/callback',
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
