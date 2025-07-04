@@ -26,17 +26,19 @@ export function authenticateAccessToken(req: Request, res: Response, next: NextF
 
 //  verify Refresh Token
 export function authenticateRefreshToken(req: Request, res: Response, next: NextFunction) {
-  const { refreshToken } = req.body;
+  // Read refresh token from cookies!
+  const refreshToken = req.cookies.refreshToken;
   if (!refreshToken) {
- res.status(401).json({ message: 'Refresh token missing' });
-    return 
+    res.status(401).json({ message: 'Refresh token missing' });
+    return;
   }
-
   jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, (err:any, user:any) => {
-    if (err)  res.status(403).json({ message: 'Invalid or expired refresh token' });
+    if (err) {
+      res.status(403).json({ message: 'Invalid or expired refresh token' });
+      return;
+    }
     req.user = user;
     next();
-       return 
   });
 }
 
