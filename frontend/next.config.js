@@ -4,7 +4,14 @@ const nextConfig = {
   generateBuildId: () => 'build',
   distDir: '.next',
   images: {
-    domains: ['pelly-chat.s3.eu-north-1.amazonaws.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'pelly-chat.s3.eu-north-1.amazonaws.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 
