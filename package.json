@@ -27,6 +27,7 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --ignore-watch frontend/.next server.ts",
     "build": "tsc --build",
+    "build:server": "tsc -p tsconfig.server.json",
     "build:backend": "tsc --build backend",
     "build:frontend": "cd frontend && npm run build",
     "clean": "tsc --build --clean"
