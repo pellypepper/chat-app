@@ -14,9 +14,7 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    outputFileTracingRoot: process.cwd(),
-  },
+ outputFileTracingRoot: process.cwd(),
 };
 
 module.exports = nextConfig;
