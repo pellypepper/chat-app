@@ -2,7 +2,8 @@ app = "chat-app-tk-blg"
 primary_region = "lhr"
 
 [build]
-
+  dockerfile = "Dockerfile"
+  
 [env]
   NODE_ENV = "production"
   PORT = "8080"
