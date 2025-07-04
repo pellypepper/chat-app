@@ -25,10 +25,10 @@ declare global {
 export const login = (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate('local', async (err: any, user: any, info: any) => {
     if (err) {
-      return res.status(500).json({ message: 'An error occurred during login', error: err });
+   res.status(500).json({ message: 'An error occurred during login', error: err });
     }
     if (!user) {
-      return res.status(401).json({ message: info?.message || 'Login failed' });
+    res.status(401).json({ message: info?.message || 'Login failed' });
     }
 
     // Get user's IP address & location
@@ -44,7 +44,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
         `You have signed in from: ${location}, IP: ${ip}. If this was not you, please contact support.`
       );
     } catch (emailError) {
-      return res.status(500).json({ message: 'Email notification error', error: emailError });
+    res.status(500).json({ message: 'Email notification error', error: emailError });
     }
 
     // Generate tokens
@@ -113,7 +113,11 @@ export const googleLoginCallback = (req: Request, res: Response, next: NextFunct
     // Remove sensitive info from user object
     const { password, ...userSafe } = user;
 
-res.redirect('https://chat-app-tk-blg.fly.dev/dashboard');
+const redirectURL =
+ 'https://chat-app-tk-blg.fly.dev/dashboard';
+
+res.redirect(redirectURL);
+
 
 
   })(req, res, next);
@@ -146,7 +150,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
 export const refreshAccessToken = (req: Request, res: Response) => {
   const user = req.user;
   if (!user) {
-    return res.status(401).json({ message: 'Invalid refresh token' });
+   res.status(401).json({ message: 'Invalid refresh token' });
+    return 
   }
 
   
@@ -158,7 +163,8 @@ export const refreshAccessToken = (req: Request, res: Response) => {
     sameSite: 'strict',
     maxAge: 15 * 60 * 1000
   });
-  return res.status(200).json({ accessToken });
+ res.status(200).json({ accessToken });
+  return 
 }
 
 // Logout 
