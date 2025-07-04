@@ -3,7 +3,10 @@ import axios from 'axios';
 
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "https://chat-app-tk-blg.fly.dev";
+axios.defaults.baseURL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:8080"
+    : "https://chat-app-tk-blg.fly.dev";
 
 
 interface Story {
@@ -101,7 +104,7 @@ export const useStoryStore = create<StoryStore>((set) => ({
 
   markViewed: async (storyId: number) => {
     try {
-      await axios.post(`/story/create/${storyId}`);
+      await axios.post(`/story/view/${storyId}`);
 
     } catch (error) {
       console.error('Failed to mark as viewed', error);
@@ -110,7 +113,7 @@ export const useStoryStore = create<StoryStore>((set) => ({
   getStoryViewers: async (storyId: number) => {
   set({ loading: true, error: null });
   try {
-    const res = await axios.get(`/story/view/${storyId}`);
+    const res = await axios.get(`/story/view/user/${storyId}`);
     const viewers = Array.isArray(res.data.viewers) ? res.data.viewers : [];
     set({ viewers, loading: false });
     return viewers; // <--- This is important!

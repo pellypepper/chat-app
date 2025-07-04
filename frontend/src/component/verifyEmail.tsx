@@ -17,7 +17,7 @@ const VerifyCode: React.FC = () => {
   const [resendAvailable, setResendAvailable] = useState(false);
 
   const searchParams = useSearchParams();
-  const tempState = searchParams.get('tempState');
+  const tempState = searchParams?.get('tempState');
   const router = useRouter();
   const { verifyEmail, isLoading, error } = useAuthStore();
 
@@ -69,7 +69,7 @@ const VerifyCode: React.FC = () => {
   return (
     <>
       <VerificationModal
-        tempState={tempState}
+        tempState={tempState ?? null}
         seconds={seconds}
         resendAvailable={resendAvailable}
         onVerify={handleVerify}

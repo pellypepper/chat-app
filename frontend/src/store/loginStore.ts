@@ -4,7 +4,11 @@ import axios from "axios";
 import { devtools } from "zustand/middleware";
 import {User} from "../types/user"; 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "https://chat-app-tk-blg.fly.dev"; 
+axios.defaults.baseURL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:8080"
+    : "https://chat-app-tk-blg.fly.dev";
+
 
 interface AuthState {
   user: User | null;
@@ -26,7 +30,7 @@ export const useAuthStore = create<AuthState>()(
     isLoading: false,
     error: null,
 
-getSession: async () => {
+    getSession: async () => {
       try {
         const res = await axios.get("/login/user", {
           withCredentials: true,
