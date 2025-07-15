@@ -159,7 +159,7 @@ export const forgetPassword = async (req: Request, res: Response): Promise<void>
       expires: expires,
     });
 
-    const resetLink = `http://localhost:3000/public/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+    const resetLink = `https://chat-app-tk-blg.fly.dev/public/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
     await sendEmail(
       email,
       "Password Reset",
