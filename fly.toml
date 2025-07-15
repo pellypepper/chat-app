@@ -2,6 +2,8 @@ app = "chat-app-tk-blg"
 primary_region = "lhr"
 
 [build]
+  # Force generic app detection
+  builder = "paketobuildpacks/builder:base"
 
 [env]
   NODE_ENV = "production"

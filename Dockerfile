@@ -1,37 +1,47 @@
-# Use Node.js 18 or later
 FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package.json files
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
-# Install dependencies
+# Install root dependencies
 RUN npm install
-RUN cd frontend && npm install
-RUN cd backend && npm install
+
+# Install frontend dependencies
+WORKDIR /app/frontend
+RUN npm install
+
+# Install backend dependencies
+WORKDIR /app/backend
+RUN npm install
+
+# Install missing dependencies
+RUN npm install geoip-lite jsonwebtoken multer nodemailer
+RUN npm install --save-dev @types/geoip-lite @types/jsonwebtoken @types/multer @types/nodemailer
+
+# Go back to frontend and install missing UI dependencies
+WORKDIR /app/frontend
+RUN npm install lucide-react @heroicons/react react-icons
 
 # Copy source code
+WORKDIR /app
 COPY . .
 
-# Build the frontend
-WORKDIR /app/frontend
-RUN npm run build
-
-# Build the backend
+# Build backend first
 WORKDIR /app/backend
 RUN npm run build
 
-# Set working directory back to root
-# Build the root server (after backend)
+# Build frontend
+WORKDIR /app/frontend
+RUN npm run build
+
+# Build root server
 WORKDIR /app
 RUN npm run build
 
-# Expose port
 EXPOSE 8080
 
-# Start the server
 CMD ["node", "dist/server.js"]
