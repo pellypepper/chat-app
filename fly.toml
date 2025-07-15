@@ -2,13 +2,12 @@ app = "chat-app-tk-blg"
 primary_region = "lhr"
 
 [build]
-  dockerfile = "Dockerfile"
-  
+  # Force generic app detection
+  builder = "paketobuildpacks/builder:base"
+
 [env]
   NODE_ENV = "production"
   PORT = "8080"
-  # Force Fly.io to ignore Next.js detection
-  FLY_FORCE_NODE_APP = "true"
 
 [http_service]
   internal_port = 8080
@@ -25,10 +24,6 @@ primary_region = "lhr"
   path = "/health"
   protocol = "http"
   timeout = "10s"
-
-[mounts]
-  source = "data"
-  destination = "/data"
 
 [[vm]]
   cpu_kind = "shared"
