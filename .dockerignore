@@ -25,3 +25,8 @@ coverage
 # Misc
 README.md
 .DS_Store
+
+# OS / Editor folders
+.vscode
+.idea
+*.swp
