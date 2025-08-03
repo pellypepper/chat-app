@@ -2,29 +2,31 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy and install root dependencies
-COPY package*.json ./
+# Copy backend and install
+COPY backend/package*.json ./backend/
+WORKDIR /app/backend
 RUN npm install
 
-# Copy backend and build
-COPY backend ./backend
-WORKDIR /app/backend
-RUN npm install && npm run build # outputs to /app/backend/dist
-
-# Copy server.ts and build
-WORKDIR /app
-COPY tsconfig.server.json ./
-COPY server.ts ./
-RUN npx tsc -p tsconfig.server.json # outputs to /app/dist/server.js
-
-# Copy frontend and build
-COPY frontend ./frontend
+# Copy frontend and install
+COPY ../frontend/package*.json ../frontend/
 WORKDIR /app/frontend
-RUN npm install && npm run build # outputs to /app/frontend/.next
+RUN npm install
 
-# Go back to main app directory for runtime
+# Copy rest of the code
 WORKDIR /app
+COPY . .
+
+# Build backend
+WORKDIR /app/backend
+RUN npm run build
+
+# Build frontend
+WORKDIR /app/frontend
+RUN npm run build
+
+# Build server
+WORKDIR /app
+RUN npm run build # or npx tsc
 
 EXPOSE 8080
-
 CMD ["node", "dist/server.js"]
