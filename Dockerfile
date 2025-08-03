@@ -2,45 +2,28 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package.json files
+# Copy and install root dependencies
 COPY package*.json ./
-COPY frontend/package*.json ./frontend/
-COPY backend/package*.json ./backend/
-
-# Install root dependencies
 RUN npm install
 
-# Install frontend dependencies
-WORKDIR /app/frontend
-RUN npm install
-
-# Install backend dependencies
+# Copy backend and build
+COPY backend ./backend
 WORKDIR /app/backend
-RUN npm install
+RUN npm install && npm run build # outputs to /app/backend/dist
 
-# Install missing dependencies
-RUN npm install geoip-lite jsonwebtoken multer nodemailer
-RUN npm install --save-dev @types/geoip-lite @types/jsonwebtoken @types/multer @types/nodemailer
-
-# Go back to frontend and install missing UI dependencies
-WORKDIR /app/frontend
-RUN npm install lucide-react @heroicons/react react-icons
-
-# Copy source code
+# Copy server.ts and build
 WORKDIR /app
-COPY . .
+COPY tsconfig.server.json ./
+COPY server.ts ./
+RUN npx tsc -p tsconfig.server.json # outputs to /app/dist/server.js
 
-# Build backend first
-WORKDIR /app/backend
-RUN npm run build
-
-# Build frontend
+# Copy frontend and build
+COPY frontend ./frontend
 WORKDIR /app/frontend
-RUN npm run build
+RUN npm install && npm run build # outputs to /app/frontend/.next
 
-# Build root server
+# Go back to main app directory for runtime
 WORKDIR /app
-RUN npm run build
 
 EXPOSE 8080
 

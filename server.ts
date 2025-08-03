@@ -11,20 +11,56 @@ import fs from 'fs';
 
 const passport = require('passport');
 
-// Import passport config (dist for prod, src for dev)
-try {
-  require("../backend/dist/config/passport");
-} catch {
-  require("./backend/src/config/passport");
+// Utility to recursively print directory tree
+function printDirectoryTree(dir: string, indent: string = '') {
+    if (!fs.existsSync(dir)) {
+        console.log(indent + '❌ Directory not found:', dir);
+        return;
+    }
+    const files = fs.readdirSync(dir);
+    files.forEach(file => {
+        const fullPath = path.join(dir, file);
+        try {
+            if (fs.statSync(fullPath).isDirectory()) {
+                console.log(indent + `📁 ${file}/`);
+                printDirectoryTree(fullPath, indent + '  ');
+            } else {
+                console.log(indent + `📄 ${file}`);
+            }
+        } catch (e) {
+            console.log(indent + `❌ Cannot stat ${file}:`, e instanceof Error ? e.message : String(e));
+        }
+    });
 }
 
-// Helper for route imports (dist for prod, src for dev)
+// Import passport config (dist for prod, src for dev)
+function importPassportConfig() {
+    // Only ever import from dist in production
+    const distPath = path.join(process.cwd(), 'backend', 'dist', 'config', 'passport');
+    if (fs.existsSync(distPath + '.js')) {
+        require(distPath + '.js');
+        console.log('✅ Loaded passport config from', distPath + '.js');
+    } else {
+        throw new Error('passport config not found in dist');
+    }
+}
+importPassportConfig();
+
 function safeImportRoute(route: string) {
-  try {
-    return require(`../backend/dist/routes/${route}`).default;
-  } catch {
-    return require(`./backend/src/routes/${route}`).default;
-  }
+    const distRoute = path.join(process.cwd(), 'backend', 'dist', 'routes', route);
+    const srcRoute = path.join(process.cwd(), 'backend', 'src', 'routes', route);
+    try {
+        if (fs.existsSync(distRoute + '.js')) {
+            return require(distRoute).default;
+        } else if (fs.existsSync(srcRoute + '.ts') || fs.existsSync(srcRoute + '.js')) {
+            return require(srcRoute).default;
+        } else {
+            throw new Error(`Route not found: ${route}`);
+        }
+    } catch (e) {
+        console.error(`❌ Error importing route ${route}:`, e instanceof Error ? e.message : String(e));
+        throw e;
+    }
 }
 
 const PORT = process.env.PORT || 8080;
@@ -41,7 +77,21 @@ nextApp.prepare().then(() => {
     console.log('Frontend directory:', path.join(process.cwd(), 'frontend'));
     console.log('Looking for .next directory at:', path.join(process.cwd(), 'frontend/.next'));
     console.log('NODE_ENV:', process.env.NODE_ENV);
-    
+
+    // Print file tree for /app, /app/dist, /app/backend, /app/backend/dist, /app/frontend, /app/frontend/.next
+    const dirsToCheck = [
+        process.cwd(),
+        path.join(process.cwd(), 'dist'),
+        path.join(process.cwd(), 'backend'),
+        path.join(process.cwd(), 'backend/dist'),
+        path.join(process.cwd(), 'frontend'),
+        path.join(process.cwd(), 'frontend/.next'),
+    ];
+    dirsToCheck.forEach(dir => {
+        console.log(`\n📂 File tree for: ${dir}`);
+        printDirectoryTree(dir, '  ');
+    });
+
     // Check if .next directory exists
     const nextDir = path.join(process.cwd(), 'frontend/.next');
     if (fs.existsSync(nextDir)) {
@@ -60,37 +110,27 @@ nextApp.prepare().then(() => {
     app.use(express.urlencoded({ extended: true }));
     app.use(cookieParser());
 
-    // app.use(session({ ... })); // Uncomment and configure if using sessions
     app.use(passport.initialize());
-    // app.use(passport.session());
 
-    // Register routes
-    try {
-        app.use('/register', safeImportRoute('register'));
-        app.use('/login', safeImportRoute('login'));
-        app.use('/profile', safeImportRoute('profile'));
-        app.use('/message', safeImportRoute('message'));
-        app.use('/friend', safeImportRoute('friend'));
-        app.use('/story', safeImportRoute('story'));
-        console.log('✅ All routes loaded');
-    } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error('❌ Error registering routes:', errorMessage);
-    }
+    // Register routes with better error reporting
+    const routes = ['register', 'login', 'profile', 'message', 'friend', 'story'];
+    routes.forEach(route => {
+        try {
+            app.use(`/${route}`, safeImportRoute(route));
+            console.log(`✅ Loaded route: /${route}`);
+        } catch (e) {
+            console.error(`❌ Failed to load route /${route}:`, e instanceof Error ? e.message : String(e));
+        }
+    });
 
-    // Serve static files from Next.js build and public
     app.use('/_next/static', express.static(path.join(process.cwd(), 'frontend/.next/static')));
     app.use(express.static(path.join(process.cwd(), 'frontend/public')));
     
-    // Health check endpoint
     app.get('/health', (req, res) => {
         res.json({ status: 'OK', timestamp: new Date().toISOString() });
     });
 
-    // All other routes handled by Next.js
     app.use((req, res) => handle(req, res));
-
-    // Error handler middleware - must be last
     app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
         console.error('❌ Error starting server:', err);
         res.status(500).json({ error: 'Internal server error' });
