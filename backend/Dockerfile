@@ -12,7 +12,7 @@ RUN npm install
 
 # Copy the rest of the backend code
 COPY . .
-
+RUN chmod +x node_modules/.bin/tsc
 # Build TypeScript code (if you have a build step)
 RUN npm run build
 
