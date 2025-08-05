@@ -2,21 +2,18 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy backend and install
+# Copy package.json files
+COPY package*.json ./
 COPY backend/package*.json ./backend/
-WORKDIR /app/backend
+COPY frontend/package*.json ./frontend/
+
+# Install dependencies for all workspaces
 RUN npm install
 
-# Copy frontend and install
-COPY ../frontend/package*.json ../frontend/
-WORKDIR /app/frontend
-RUN npm install
-
-# Copy rest of the code
-WORKDIR /app
+# Copy source code
 COPY . .
 
-# Build backend
+# Build backend first
 WORKDIR /app/backend
 RUN npm run build
 
@@ -24,9 +21,16 @@ RUN npm run build
 WORKDIR /app/frontend
 RUN npm run build
 
-# Build server
+# Build server (from root)
 WORKDIR /app
-RUN npm run build # or npx tsc
+RUN npm run build:server
+
+# Debug: List contents to verify build
+RUN echo "=== Root directory ===" && ls -la
+RUN echo "=== Backend dist ===" && ls -la backend/dist/ || echo "backend/dist not found"
+RUN echo "=== Backend dist config ===" && ls -la backend/dist/config/ || echo "backend/dist/config not found"
+RUN echo "=== Frontend .next ===" && ls -la frontend/.next/ || echo "frontend/.next not found"
 
 EXPOSE 8080
+
 CMD ["node", "dist/server.js"]
