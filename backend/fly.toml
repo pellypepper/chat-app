@@ -1,0 +1,31 @@
+app = "your-app-name"   # CHANGE this to your unique Fly app name!
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+
+[experimental]
+  auto_rollback = true
+
+[deploy]
+  release_command = "npm run migrate" # Optional: remove if you have no DB migrations
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.tcp_checks]]
+    interval = 10000
+    timeout = 2000
+    grace_period = "10s"
+    restart_limit = 0

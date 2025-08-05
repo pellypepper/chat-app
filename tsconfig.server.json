@@ -15,7 +15,7 @@
     "moduleResolution": "node"
   },
   "include": [
-    "server.ts",
+    "backend/server.ts",
     "backend/src/**/*"
   ],
   "exclude": [
