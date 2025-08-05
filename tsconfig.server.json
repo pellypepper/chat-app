@@ -17,7 +17,7 @@
   "include": [
     "backend/server.ts",
     "backend/src/**/*"
-  ],
+, "backend/tsconfig.json"  ],
   "exclude": [
     "node_modules",
     "frontend",
