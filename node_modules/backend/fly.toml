@@ -1,4 +1,4 @@
-app = "your-app-name"   # CHANGE this to your unique Fly app name!
+app = "chat-app-frdxoa"
 
 [build]
   dockerfile = "Dockerfile"
@@ -10,7 +10,7 @@ app = "your-app-name"   # CHANGE this to your unique Fly app name!
   auto_rollback = true
 
 [deploy]
-  release_command = "npm run migrate" # Optional: remove if you have no DB migrations
+  release_command = "npm run migrate" # Remove this if you don't need migrations
 
 [[services]]
   internal_port = 8080
