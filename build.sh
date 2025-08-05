@@ -9,12 +9,24 @@ rm -rf backend/dist
 rm -rf frontend/.next
 rm -rf frontend/dist
 rm -f package-lock.json
-rm -f backend/package-lock.json
+rm -f backend/package-lock.json  
 rm -f frontend/package-lock.json
 
-# Install dependencies (this will create fresh lock files)
-echo "📦 Installing dependencies..."
-npm install
+# Install root dependencies first to establish version resolutions
+echo "📦 Installing root dependencies..."
+npm install --no-package-lock
+
+# Install backend dependencies
+echo "📦 Installing backend dependencies..."
+cd backend
+npm install --no-package-lock
+cd ..
+
+# Install frontend dependencies
+echo "📦 Installing frontend dependencies..."
+cd frontend
+npm install --no-package-lock
+cd ..
 
 # Build backend
 echo "🔧 Building backend..."

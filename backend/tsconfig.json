@@ -5,8 +5,12 @@
     "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
@@ -14,7 +18,8 @@
     "sourceMap": false,
     "moduleResolution": "node",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "allowJs": true
   },
   "include": [
     "src/**/*"

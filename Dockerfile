@@ -10,8 +10,34 @@ COPY frontend/package*.json ./frontend/
 # Delete any existing lock files to avoid sync issues
 RUN rm -f package-lock.json backend/package-lock.json frontend/package-lock.json
 
-# Install dependencies (this will create new lock files)
-RUN npm install
+# Install root dependencies first to establish version resolutions
+RUN npm install --no-package-lock
+
+# Install backend dependencies
+WORKDIR /app/backend
+RUN npm install --no-package-lock
+
+# Install frontend dependencies  
+WORKDIR /app/frontend
+RUN npm install --no-package-lock
+
+# Go back to root
+WORKDIR /app
+
+# Copy source code
+COPY . .
+
+# Build backend first
+WORKDIR /app/backend
+RUN npm run build
+
+# Build frontend
+WORKDIR /app/frontend
+RUN npm run build
+
+# Build server (from root)
+WORKDIR /app
+RUN npm run build:server
 
 # Copy source code
 COPY . .
