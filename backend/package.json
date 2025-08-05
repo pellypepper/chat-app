@@ -50,6 +50,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "ts-node-dev server.ts",
-    "build": "tsc"
+    "build": "tsc",
+      "migrate": "echo no migration needed"
   }
 }
