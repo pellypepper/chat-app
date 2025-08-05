@@ -2,14 +2,17 @@
 
 echo "🚀 Starting monorepo build process..."
 
-# Clean previous builds
-echo "🧹 Cleaning previous builds..."
+# Clean previous builds and lock files
+echo "🧹 Cleaning previous builds and lock files..."
 rm -rf dist
 rm -rf backend/dist
 rm -rf frontend/.next
 rm -rf frontend/dist
+rm -f package-lock.json
+rm -f backend/package-lock.json
+rm -f frontend/package-lock.json
 
-# Install dependencies
+# Install dependencies (this will create fresh lock files)
 echo "📦 Installing dependencies..."
 npm install
 

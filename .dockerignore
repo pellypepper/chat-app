@@ -1,32 +1,44 @@
-# Node modules (don't copy local ones, let Docker install clean)
 node_modules
-**/node_modules
-
-# Git & config
-.git
-.gitignore
-
-# Environment variables
-.env
-.env.*
-
-# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# Build output
-.next
+# Lock files (let Docker generate fresh ones)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+backend/package-lock.json
+frontend/package-lock.json
+
+# Build outputs
 dist
-build
-coverage
-.nyc_output
+.next
+backend/dist
+frontend/.next
+frontend/dist
 
-# Misc
-README.md
-.DS_Store
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# OS / Editor folders
+# IDE
 .vscode
 .idea
 *.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Other
+README.md
+*.md

@@ -2,12 +2,15 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package.json files
+# Copy package.json files first
 COPY package*.json ./
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
 
-# Install dependencies for all workspaces
+# Delete any existing lock files to avoid sync issues
+RUN rm -f package-lock.json backend/package-lock.json frontend/package-lock.json
+
+# Install dependencies (this will create new lock files)
 RUN npm install
 
 # Copy source code
