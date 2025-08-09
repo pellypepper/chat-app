@@ -172,7 +172,7 @@ const Register: React.FC<RegisterProps> = ({ }) => {
         <SuccessPopup
           message={`A verification code has been sent to ${email}. Click continue to input your code.`}
           handleTimeout={() => setShowSuccess(false)}
-          url="/withNavpages/verify-email"
+          url="/public/verify-email"
           showContinueButton
           tempState={email}
         />
