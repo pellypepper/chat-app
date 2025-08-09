@@ -20,4 +20,4 @@ RUN npm run build
 EXPOSE 8080
 
 # Start the server
-CMD ["node", "--max-old-space-size=128", "dist/server.js"]
+CMD ["node", "dist/server.js"]

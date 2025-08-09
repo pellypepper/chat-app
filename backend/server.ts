@@ -8,17 +8,14 @@ import passport from 'passport';
 
 // Import passportConfig from compiled output for production
 // In dev, use './src/config/passport'; in prod, use './config/passport'
-import passportConfig from './config/passport';
-
-import registerRoute from './routes/register';
-import loginRoute from './routes/login';
-import profileRoute from './routes/profile';
-import messageRoute from './routes/message';
-import friendRoute from './routes/friend';
-import storyRoute from './routes/story';
-
-import { initializeSocket } from './util/socket';
-
+import passportConfig from './src/config/passport';
+import registerRoute from './src/routes/register';
+import loginRoute from './src/routes/login';
+import profileRoute from './src/routes/profile';
+import messageRoute from './src/routes/message';
+import friendRoute from './src/routes/friend';
+import storyRoute from './src/routes/story';
+import { initializeSocket } from './src/util/socket';
 const PORT = process.env.PORT || 8080;
 const app = express();
 
