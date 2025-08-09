@@ -41,7 +41,9 @@ const Signin: React.FC = () => {
 
   const handleGoogleLogin = async () => {
     try {
+      console.log('Attempting Google login...');
       await googleLogin();
+      console.log('Google login successful');
       if (isAuthenticated) router.push('/dashboard');
     } catch (err) {
       console.error('Google login failed:', err);
