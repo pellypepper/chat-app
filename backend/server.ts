@@ -4,26 +4,24 @@ import express, { Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { createServer } from 'http';
-
-// Import passport and its config directly
 import passport from 'passport';
 
+// Import passportConfig from compiled output for production
+// In dev, use './src/config/passport'; in prod, use './config/passport'
+import passportConfig from './config/passport';
 
-// Import route handlers directly
-import registerRoute from './src/routes/register';
-import loginRoute from './src/routes/login';
-import profileRoute from './src/routes/profile';
-import messageRoute from './src/routes/message';
-import friendRoute from './src/routes/friend';
-import storyRoute from './src/routes/story';
+import registerRoute from './routes/register';
+import loginRoute from './routes/login';
+import profileRoute from './routes/profile';
+import messageRoute from './routes/message';
+import friendRoute from './routes/friend';
+import storyRoute from './routes/story';
 
-// Import socket initializer directly
-import { initializeSocket } from './src/util/socket';
+import { initializeSocket } from './util/socket';
 
 const PORT = process.env.PORT || 8080;
 const app = express();
 
-// CORS configuration
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
         ? 'https://chat-app-frontend-eybx.vercel.app'
@@ -34,10 +32,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
+passportConfig();
 app.use(passport.initialize());
 
-// Register routes
 app.use('/register', registerRoute);
 app.use('/login', loginRoute);
 app.use('/profile', profileRoute);
@@ -45,28 +42,18 @@ app.use('/message', messageRoute);
 app.use('/friend', friendRoute);
 app.use('/story', storyRoute);
 
-// Health check endpoint
 app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'OK', 
-        timestamp: new Date().toISOString(),
-        env: process.env.NODE_ENV 
-    });
+    res.json({ status: 'OK', timestamp: new Date().toISOString(), env: process.env.NODE_ENV });
 });
-
-// Error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
 });
 
 const httpServer = createServer(app);
-
-// Initialize socket if available
 if (initializeSocket) {
     initializeSocket(httpServer);
 }
-
 httpServer.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
 });

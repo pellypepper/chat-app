@@ -70,3 +70,9 @@ passport.use(new GoogleStrategy(
     }
   }
 ));
+
+
+const passportConfig = () => {
+  // Optionally put serializeUser/deserializeUser logic here
+};
+export default passportConfig;
