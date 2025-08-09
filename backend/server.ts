@@ -4,65 +4,21 @@ import express, { Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { createServer } from 'http';
-import path from 'path';
-import fs from 'fs';
 
-const passport = require('passport');
+// Import passport and its config directly
+import passport from 'passport';
 
-// Utility: Import passport config from possible locations
-function importPassportConfig() {
-    const possiblePaths = [
-        path.join(__dirname, 'config', 'passport.js'),
-        path.join(__dirname, 'config', 'passport', 'index.js'),
-    ];
-    for (const configPath of possiblePaths) {
-        if (fs.existsSync(configPath)) {
-            try {
-                require(configPath);
-                return;
-            } catch (error) {
-                console.error(`Error loading passport config from ${configPath}:`, error);
-            }
-        }
-    }
-    throw new Error('passport config not found in any expected location');
-}
 
-// Utility: Import route handler from possible locations
-function safeImportRoute(route: string) {
-    const possiblePaths = [
-        path.join(__dirname, 'routes', route + '.js'),
-    ];
-    for (const routePath of possiblePaths) {
-        if (fs.existsSync(routePath)) {
-            try {
-                const routeModule = require(routePath);
-                return routeModule.default || routeModule;
-            } catch (error) {
-                console.error(`Error loading route from ${routePath}:`, error);
-            }
-        }
-    }
-    throw new Error(`Route not found: ${route}`);
-}
+// Import route handlers directly
+import registerRoute from './src/routes/register';
+import loginRoute from './src/routes/login';
+import profileRoute from './src/routes/profile';
+import messageRoute from './src/routes/message';
+import friendRoute from './src/routes/friend';
+import storyRoute from './src/routes/story';
 
-// Utility: Import socket initializer from possible locations
-function safeImportSocket() {
-    const possiblePaths = [
-        path.join(__dirname, 'util', 'socket.js'),
-    ];
-    for (const socketPath of possiblePaths) {
-        if (fs.existsSync(socketPath)) {
-            try {
-                const socketModule = require(socketPath);
-                return socketModule.initializeSocket || socketModule.default?.initializeSocket;
-            } catch (error) {
-                console.error(`Error loading socket from ${socketPath}:`, error);
-            }
-        }
-    }
-    return null;
-}
+// Import socket initializer directly
+import { initializeSocket } from './src/util/socket';
 
 const PORT = process.env.PORT || 8080;
 const app = express();
@@ -78,24 +34,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Initialize passport if config is found
-try {
-    importPassportConfig();
-    app.use(passport.initialize());
-} catch (error) {
-    console.error('Failed to initialize passport:', error);
-}
+
+app.use(passport.initialize());
 
 // Register routes
-const routes = ['register', 'login', 'profile', 'message', 'friend', 'story'];
-routes.forEach(route => {
-    try {
-        const routeHandler = safeImportRoute(route);
-        app.use(`/${route}`, routeHandler);
-    } catch (e) {
-        console.error(`Failed to load route /${route}:`, e instanceof Error ? e.message : String(e));
-    }
-});
+app.use('/register', registerRoute);
+app.use('/login', loginRoute);
+app.use('/profile', profileRoute);
+app.use('/message', messageRoute);
+app.use('/friend', friendRoute);
+app.use('/story', storyRoute);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -115,7 +63,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 const httpServer = createServer(app);
 
 // Initialize socket if available
-const initializeSocket = safeImportSocket();
 if (initializeSocket) {
     initializeSocket(httpServer);
 }
