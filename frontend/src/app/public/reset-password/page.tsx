@@ -6,7 +6,7 @@ import { MultiRingSpinner } from '@/component/spinner';
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={<div><MultiRingSpinner /></div>}>
-      <ResetPasswordModal />
+      <ResetPasswordModal  />
     </Suspense>
   );
 }
