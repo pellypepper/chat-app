@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import io, { Socket } from "socket.io-client";
 
-const SOCKET_URL = "https://chat-app-tk-blg.fly.dev"; // Replace with your actual socket server URL
+const SOCKET_URL = "https://chat-app-frontend-eybx.vercel.app"; // Replace with your actual socket server URL
 
 type SocketContextType = {
   socket: Socket | null;
