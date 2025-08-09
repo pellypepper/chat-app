@@ -76,7 +76,7 @@ export const useAuthStore = create<AuthState>()(
     googleLogin: () => {
       console.log("Redirecting to Google login");
       // Redirects user to Google login page
-      window.location.href = "/login/google";
+      window.location.href = "https://chat-app-frdxoa-production.up.railway.app/login/google";
       console.log("Redirected to Google login");
     },
 
