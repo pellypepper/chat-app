@@ -87,7 +87,7 @@ const VerifyCode: React.FC = () => {
         <SuccessPopup
           message={`Your email is verified. Redirecting...`}
           handleTimeout={() => {}}
-          url="/withNavpages/signin"
+          url="/public/signin"
           tempState={null}
         />
       )}
