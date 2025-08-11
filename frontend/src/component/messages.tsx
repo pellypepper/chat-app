@@ -2,6 +2,7 @@
 
 import { Conversations } from '../types/user';
 import Image from 'next/image';
+import { formatDistanceToNow } from 'date-fns';
 
 type MessagesProps = {
   conversations: Conversations[];
@@ -25,7 +26,7 @@ const Messages: React.FC<MessagesProps> = ({ conversations, onChatSelect }) => {
               }`}
             >
               {/* Avatar */}
-              <div className="relative w-[45px] h-[45px] rounded-full bg-gradient-purple text-primary flex items-center justify-center font-semibold text-base">
+              <div className="relative w-[40px] h-[40px] md:w-[45px] md:h-[45px] rounded-full bg-gradient-purple text-primary flex items-center justify-center font-semibold text-base">
                 {conversation.avatar ? (
                   <Image
                     width={80}
@@ -43,30 +44,21 @@ const Messages: React.FC<MessagesProps> = ({ conversations, onChatSelect }) => {
               </div>
 
               {/* Content */}
-              <div className="flex-1 w-[200px]">
+              <div className="flex-1 w-[50%]">
                 <div className="font-semibold text-primary">{conversation.name}</div>
                 <div className="text-sm text-gray-400 truncate">{conversation.message}</div>
               </div>
 
-              {/* Meta */}
-              <div className="flex flex-col items-end gap-1 text-xs">
-                <span className="text-gray-400">
-                  {conversation.time
-                    ? new Date(conversation.time).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "short",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : ""}
-                </span>
-                {conversation.unread > 0 && (
-                  <span className="bg-gradient-orange text-primary font-bold w-5 h-5 flex items-center justify-center rounded-full text-xs">
-                    {conversation.unread}
-                  </span>
-                )}
-              </div>
+        
+             {/* Meta */}
+<div className="flex flex-col items-end gap-1 text-xs text-gray-400">
+  <span>
+    {conversation.time
+      ? formatDistanceToNow(new Date(conversation.time), { addSuffix: true })
+      : ''}
+  </span>
+</div>
+
             </div>
           );
         })}

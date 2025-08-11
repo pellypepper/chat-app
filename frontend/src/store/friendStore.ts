@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import axios from 'axios';
 import {User} from '../types/user';
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL ="https://chat-app-frdxoa-production.up.railway.app";
+axios.defaults.baseURL ="http://localhost:8080";
 
 
 interface FriendsState {

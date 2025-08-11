@@ -8,7 +8,7 @@ interface SearchInputProps {
 }
 
 const SearchInput: React.FC<SearchInputProps> = ({ value, onChange }) => (
-  <div className="px-5 pb-5">
+  <div className="">
     <input
       className="w-full px-4 py-3 bg-tertiary-bg border text-primary border-primary mt-3 h-[50px] rounded text-sm focus:outline-none focus:border-[#58a6ff] focus:ring-4 focus:ring-[#58a6ff]/20"
       type="text"

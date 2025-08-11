@@ -5,7 +5,7 @@ import { devtools } from "zustand/middleware";
 import { User } from "../types/user";
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL ="https://chat-app-frdxoa-production.up.railway.app";
+axios.defaults.baseURL ="http://localhost:8080";
 
 
 

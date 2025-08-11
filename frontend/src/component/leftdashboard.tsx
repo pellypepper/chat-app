@@ -10,6 +10,7 @@ import SuccessPopup from './successPop';
 import ErrorPopup from './errorpopup';
 import { MultiRingSpinner } from './spinner';
 import { useChatStore } from '@/store/messageStore';
+import { Settings, Power } from 'lucide-react';
 
 type LeftDashboardProps = {
   onChatSelect: (chatId: number) => void;
@@ -55,49 +56,55 @@ const handleLogout = async () => {
   };
 
   return (
-    <section className=" p-4 h-screen bg-primary-bg flex flex-col">
-      <div className="flex justify-between p-5 items-center mb-4">
-        <div className="w-10 h-10 rounded-full bg-gradient-icon text-primary flex items-center justify-center font-semibold">
-{(user?.firstname?.[0]?.toUpperCase() || "") + (user?.lastname?.[0]?.toUpperCase() || "")}
-
-        </div>
-        <div className="flex gap-2">
-          <p onClick={handleClick} className="text-primary text-xl md:text-2xl cursor-pointer">⚙️</p>
-<p onClick={handleLogout} className="text-primary text-xl md:text-2xl cursor-pointer">⏻</p>
-        </div>
+    <section className="relative w-full  h-screen bg-primary-bg flex flex-col">
+  <div className="sticky top-0 left-0 right-0  bottom-0 bg-primary-bg border-b border-primary z-60 ">
+    {/* User info + buttons */}
+    <div className="flex justify-between p-5 items-center mb-4">
+      <div className="w-10 h-10 rounded-full bg-gradient-icon text-primary flex items-center justify-center font-semibold">
+        {(user?.firstname?.[0]?.toUpperCase() || "") + (user?.lastname?.[0]?.toUpperCase() || "")}
       </div>
+      <div className="flex gap-2">
+        <button onClick={handleClick} aria-label="Settings">
+          <Settings className="text-primary w-6 h-6" />
+        </button>
+        <button onClick={handleLogout} aria-label="Logout">
+          <Power className="text-primary w-6 h-6" />
+        </button>
+      </div>
+    </div>
 
-      {/* Navigation */}
-      <nav className="border-b border-primary">
-        <ul className="flex justify-between items-center w-full relative">
-          {navItems.map((item) => (
-            <li key={item} className="flex-1">
-              <button
-                onClick={() => setActiveTab(item)}
-                className={`w-full p-4 text-center transition-all duration-200 relative ${
-                  activeTab === item
-                    ? 'text-primary font-semibold'
-                    : 'text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                {item}
-                {activeTab === item && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-purple rounded-full"></div>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
+    {/* Navigation */}
+    <nav className=" border-primary">
+      <ul className="flex justify-between items-center ">
+        {navItems.map((item) => (
+          <li key={item} className="flex-1">
+            <button
+              onClick={() => setActiveTab(item)}
+              className={`w-full p-4 text-center transition-all duration-200 relative ${
+                activeTab === item
+                  ? 'text-primary font-semibold'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              {item}
+              {activeTab === item && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-purple rounded-full"></div>
+              )}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
 
       {/* Content Area */}
-      <section className="flex-1 flex flex-col min-h-0">
+      <section className="flex-1 flex flex-col min-h-0 overflow-y-auto scrollbar-auto-hide">
         {activeTab === 'Messages' && (
           <div className="flex-1 flex flex-col min-h-0">
             <div className="p-4 flex-shrink-0">
               <Stories />
             </div>
-<div className="flex-1 border-t  border-primary overflow-y-auto scrollbar-auto-hide px-5">
+<div className="flex-1 border-t  border-primary overflow-y-auto scrollbar-auto-hide">
 {chats.length > 0 ? (
   <Messages
     onChatSelect={onChatSelect}
@@ -143,7 +150,7 @@ const handleLogout = async () => {
         )}
 
         {activeTab === 'Friends' && (
-          <div className="p-5">
+          <div className="">
             <Friends  onChatSelect={onChatSelect} />
           </div>
         )}
@@ -158,7 +165,7 @@ const handleLogout = async () => {
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto scrollbar-auto-hide px-5">
+            <div className="flex-1 overflow-y-auto scrollbar-auto-hide">
               {chats.length > 0 ? (
                 <Messages
                   onChatSelect={onChatSelect}

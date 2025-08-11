@@ -14,11 +14,13 @@ const Navigation: React.FC<NavigationProps> = ({isOpen, handleClick }) => {
   const handleSigninClick = () => {
    
   router.push('/public/signin');
+  handleClick();
   };
 
   const handleMenuClick = () => {
  
     handleClick();
+   
   };
 
  
@@ -53,6 +55,7 @@ const Navigation: React.FC<NavigationProps> = ({isOpen, handleClick }) => {
           <li>
             <a
               href="#features"
+
               className="text-primary font-medium text-sm hover:text-[#58a6ff] transition transform hover:-translate-y-0.5"
             >
               Features
@@ -85,7 +88,7 @@ const Navigation: React.FC<NavigationProps> = ({isOpen, handleClick }) => {
           <ul className="flex flex-col items-center p-4 space-y-4">
             <li>
               <a
-                href="/withNavpages"
+                href="/public"
                 className="text-primary font-medium text-sm hover:text-[#58a6ff] transition transform hover:-translate-y-0.5"
               >
                 Home
@@ -93,6 +96,7 @@ const Navigation: React.FC<NavigationProps> = ({isOpen, handleClick }) => {
             </li>
             <li>
               <a
+                            onClick={handleMenuClick}
                 href="#features"
                 className="text-primary font-medium text-sm hover:text-[#58a6ff] transition transform hover:-translate-y-0.5"
               >

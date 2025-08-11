@@ -18,7 +18,7 @@ const FriendCard: React.FC<FriendCardProps> = ({ user, onMessage, onAdd, onRemov
   
     const initials = `${(user?.firstname?.[0]?.toUpperCase() || "") + (user?.lastname?.[0]?.toUpperCase() || "")}`;
   return (
-    <div className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-xl hover:bg-gray-800/70 transition-colors">
+    <div className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-xl hover:bg-gray-800/70 transition-colors">
       <div className="relative">
         <div className="w-12 h-12 bg-gradient-purple rounded-full flex items-center justify-center text-primary font-semibold">
     

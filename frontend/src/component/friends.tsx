@@ -188,11 +188,13 @@ const fetchUserStatuses = useCallback(() => {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 max-h-screen">
-      <SearchInput value={searchQuery} onChange={setSearchQuery} />
+    <div className="flex p-3 relative flex-col h-full min-h-0 max-h-screen">
+   <div className='sticky left-0 right-0 top-0 bg-primary-bg  z-80  '>
+        <SearchInput value={searchQuery} onChange={setSearchQuery} />
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab}  />
+   </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-auto-hide p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto scrollbar-auto-hide py-4 space-y-3">
         {loading && <div className="text-center text-gray-400">Loading...</div>}
         {error && <div className="text-center text-red-500">{error}</div>}
 

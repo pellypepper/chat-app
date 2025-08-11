@@ -15,20 +15,21 @@ const Signin: React.FC = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
   const { login, isAuthenticated, googleLogin, isLoading, error } = useAuthStore();
 
+  // Redirect when logged in
   useEffect(() => {
     if (isAuthenticated) {
       setShowSuccess(true);
       const timer = setTimeout(() => router.push('/dashboard'), 2000);
       return () => clearTimeout(timer);
-    } else if (error) {
-      setShowError(true);
     }
-  }, [isAuthenticated, error, router]);
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email || !password) {
       setFormError('Please enter both email and password.');
       setShowError(true);
@@ -37,16 +38,21 @@ const Signin: React.FC = () => {
 
     setFormError(null);
     await login({ email, password });
+
+    // Show popup immediately if backend error exists
+    if (useAuthStore.getState().error) {
+      setShowError(true);
+    }
   };
 
   const handleGoogleLogin = async () => {
     try {
-      console.log('Attempting Google login...');
       await googleLogin();
-      console.log('Google login successful');
       if (isAuthenticated) router.push('/dashboard');
     } catch (err) {
       console.error('Google login failed:', err);
+      setFormError('Google login failed. Please try again.');
+      setShowError(true);
     }
   };
 
@@ -93,6 +99,7 @@ const Signin: React.FC = () => {
         <ErrorPopup
           message={formError || error || 'Login failed. Please try again.'}
           handleTimeout={() => setShowError(false)}
+          handleSendResetLink={() => setShowError(false)}
         />
       )}
     </div>

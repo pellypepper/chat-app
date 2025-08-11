@@ -148,12 +148,7 @@ const Register: React.FC<RegisterProps> = ({ }) => {
   {isLoading ? 'Creating Account...' : 'Create Account'}
 </button>
 
-  {/* Display error message if exists */}
-{error && (
-  <div className="text-red-500 text-sm mt-2 text-center">
-    {error}
-  </div>
-)}
+ 
 
 
               <div className="text-center mt-3 text-[#e6edf3] text-sm">
@@ -183,6 +178,7 @@ const Register: React.FC<RegisterProps> = ({ }) => {
         <ErrorPopup
           message={error || 'An error occurred while creating your account. Please try again.'}
           handleTimeout={() => setShowError(false)}
+          handleSendResetLink={() => setShowError(false)}
         />
       )}
 
