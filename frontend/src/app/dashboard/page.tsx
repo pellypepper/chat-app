@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/loginStore';
 import { useFriendsStore } from '@/store/friendStore';
 import type { Chat } from '@/types/user';
 import { MultiRingSpinner } from '@/component/spinner';
-
+import { useRouter } from 'next/navigation'; 
 import DashboardMobileView from '@/component/dashboardMobileView';
 import DashboardDesktopView from '@/component/dashboardDesktopView';
 import ModalsContainer from '@/component/ModalContainer';
@@ -18,7 +18,7 @@ const Dashboard = () => {
   const [showUpdateGroup, setShowUpdateGroup] = useState(false);
   const [showFriendProfile, setShowFriendProfile] = useState(false);
   const [updateGroupChat, setUpdateGroupChat] = useState<Chat | null>(null);
-
+  const router = useRouter();  
   const { isAuthenticated, getSession } = useAuthStore();
   const { chats, fetchChatsSummary } = useChatStore();
   const [loading, setLoading] = useState(true);
@@ -32,6 +32,12 @@ const Dashboard = () => {
     };
     fetchUser();
   }, [getSession]);
+
+    useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push('/public'); // Redirect to homepage
+    }
+  }, [isAuthenticated, loading, router]);
 
   // Handle loading stages based on authentication status
   useEffect(() => {
