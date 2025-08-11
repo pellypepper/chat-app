@@ -202,7 +202,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, 
       <div className="flex relative flex-col flex-1 h-screen">
            { chat  ?   
     ( <div className="flex flex-col flex-1 h-screen">
-         <div className="p-5 sticky top-0 right-0 left-0 border-b border flex items-center justify-between">
+         <div className="p-5 sticky top-0 right-0 left-0 border-b  flex items-center justify-between">
            {/* Header */}
           <div className="flex items-center gap-3">
             <button onClick={onBack} className="md:hidden text-xs text-primary mb-4">
