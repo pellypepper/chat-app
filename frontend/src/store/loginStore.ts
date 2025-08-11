@@ -4,7 +4,7 @@ import axios from "axios";
 import { devtools } from "zustand/middleware";
 import {User} from "../types/user"; 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL ="http://localhost:8080";
+axios.defaults.baseURL ="https://chat-app-frdxoa-production.up.railway.app";
 
 
 interface AuthState {
@@ -76,7 +76,7 @@ export const useAuthStore = create<AuthState>()(
     googleLogin: () => {
       console.log("Redirecting to Google login");
       // Redirects user to Google login page
-      window.location.href = "https://localhost:8080/login/google";
+      window.location.href = "https://chat-app-frdxoa-production.up.railway.app/login/google";
       console.log("Redirected to Google login");
     },
 

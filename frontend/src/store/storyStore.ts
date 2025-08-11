@@ -3,7 +3,7 @@ import axios from 'axios';
 
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL ="http://localhost:8080";
+axios.defaults.baseURL ="https://chat-app-frdxoa-production.up.railway.app";
 
 
 interface Story {
