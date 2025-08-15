@@ -19,59 +19,58 @@ const Dashboard = () => {
   const [showFriendProfile, setShowFriendProfile] = useState(false);
   const [updateGroupChat, setUpdateGroupChat] = useState<Chat | null>(null);
   const router = useRouter();  
-  const { isAuthenticated, getSession } = useAuthStore();
+
+  const { isAuthenticated, getSession, sessionChecked } = useAuthStore();
   const { chats, fetchChatsSummary } = useChatStore();
-  const [loading, setLoading] = useState(true);
-  const [loadingStage, setLoadingStage] = useState<'redirecting' | 'authenticating'>('redirecting');
   const { fetchFriends, fetchOnlineFriends, fetchAllUsers } = useFriendsStore();
 
-  //fetch user session on mount
+  const [loading, setLoading] = useState(true);
+  const [loadingStage, setLoadingStage] = useState<'redirecting' | 'authenticating'>('redirecting');
+
+  // Fetch user session on mount
   useEffect(() => {
-    const fetchUser = async () => {
-      await getSession();
-    };
-    fetchUser();
+    getSession();
   }, [getSession]);
 
-    useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push('/public'); // Redirect to homepage
+  // Redirect if user is not authenticated
+  useEffect(() => {
+    if (sessionChecked && !isAuthenticated) {
+      router.push('/public');
     }
-  }, [isAuthenticated, loading, router]);
+  }, [sessionChecked, isAuthenticated, router]);
 
-  // Handle loading stages based on authentication status
+  // Handle loading stages
   useEffect(() => {
     if (isAuthenticated) {
       setLoadingStage('redirecting');
-      const timer1 = setTimeout(() => {
-        setLoadingStage('authenticating');
-      }, 2500);
 
-      const timer2 = setTimeout(() => {
-        setLoading(false);
-      }, 5000);
+      const timer1 = setTimeout(() => setLoadingStage('authenticating'), 2500);
+      const timer2 = setTimeout(() => setLoading(false), 5000);
 
       return () => {
         clearTimeout(timer1);
         clearTimeout(timer2);
       };
-    } else {
+    } else if (sessionChecked && !isAuthenticated) {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, sessionChecked]);
 
+  // Fetch chats and friends data after authentication
   useEffect(() => {
-    fetchAllUsers();
-    fetchFriends();
-    fetchChatsSummary();
-    fetchOnlineFriends();
-  }, [fetchAllUsers, fetchFriends, fetchOnlineFriends, fetchChatsSummary]);
+    if (sessionChecked && isAuthenticated) {
+      fetchAllUsers();
+      fetchFriends();
+      fetchChatsSummary();
+      fetchOnlineFriends();
+    }
+  }, [fetchAllUsers, fetchFriends, fetchOnlineFriends, fetchChatsSummary, sessionChecked, isAuthenticated]);
 
+  // Handlers
   const handleClick = () => setIsOpen(true);
   const handleClose = () => setIsOpen(false);
 
-  // Handle chat selection
-  const handleChatSelect = async (chatId: number, optionalChat?: Chat) => {
+  const handleChatSelect = (chatId: number, optionalChat?: Chat) => {
     if (optionalChat) {
       setSelectedChat(optionalChat);
       return;
@@ -82,7 +81,8 @@ const Dashboard = () => {
       setSelectedChat(null);
       return;
     }
-    const normalizedSelected = {
+
+    setSelectedChat({
       ...selected,
       participants: selected.participants.map((p: any) => ({
         id: p.id,
@@ -90,14 +90,10 @@ const Dashboard = () => {
       })),
       lastMessage: selected.lastMessage ?? undefined,
       lastMessageAt: selected.lastMessageAt ?? undefined,
-    };
-    setSelectedChat(normalizedSelected);
+    });
   };
 
-  // Handle group creation toggle
-  const handleGroup = () => {
-    setShowCreateGroup(!showCreateGroup);
-  };
+  const handleGroup = () => setShowCreateGroup(!showCreateGroup);
 
   const handleUpdateOpen = (chat: Chat) => {
     if (chat?.isGroup) {
@@ -109,7 +105,6 @@ const Dashboard = () => {
     }
   };
 
-  // Handle click outside to close modals
   const handleClickOutside = () => {
     setShowCreateGroup(false);
     setShowUpdateGroup(false);
@@ -119,29 +114,30 @@ const Dashboard = () => {
   const handleGroupUpdated = (updated: { id: number; name: string; participants: number[] }) => {
     setSelectedChat(prev => prev && prev.id === updated.id
       ? {
-        ...prev,
-        name: updated.name,
-        participants: updated.participants.map(id => {
-          const found = prev.participants.find(p => p.id === id);
-          return found ? found : { id, name: "" };
-        })
-      }
+          ...prev,
+          name: updated.name,
+          participants: updated.participants.map(id => {
+            const found = prev.participants.find(p => p.id === id);
+            return found ? found : { id, name: "" };
+          })
+        }
       : prev
     );
   };
 
   const handleBack = () => setSelectedChat(null);
 
+  // Render loading spinner
   if (loading) {
     return (
-      <div className="h-screen bg-navbar-bg flex flex-col justify-center items-center gap-4 ">
+      <div className="h-screen bg-navbar-bg flex flex-col justify-center items-center gap-4">
         <MultiRingSpinner />
         <p className="text-lg font-semibold text-primary">
-          {loadingStage === 'redirecting' ? 'redirecting...' : 'Authenticating...'}
+          {loadingStage === 'redirecting' ? 'Redirecting...' : 'Authenticating...'}
         </p>
         <div className="w-64 h-2 bg-gray-300 rounded-full overflow-hidden mt-2">
           <div
-            className={`h-full bg-gradient-to-r from-blue-400 to-purple-600 animate-progressBar`}
+            className="h-full bg-gradient-to-r from-blue-400 to-purple-600 animate-progressBar"
             style={{ animationDuration: '5s' }}
           />
         </div>
@@ -149,8 +145,9 @@ const Dashboard = () => {
     );
   }
 
+  // Render main dashboard
   return (
-    <div className="h-screen overflow-hidden ">
+    <div className="h-screen overflow-hidden">
       <DashboardMobileView
         selectedChat={selectedChat}
         handleUpdateOpen={handleUpdateOpen}
