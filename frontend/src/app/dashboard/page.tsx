@@ -20,51 +20,71 @@ const Dashboard = () => {
   const [updateGroupChat, setUpdateGroupChat] = useState<Chat | null>(null);
   const router = useRouter();  
 
-  const { isAuthenticated, getSession, sessionChecked } = useAuthStore();
+  const { isAuthenticated, getSession, sessionChecked, isLoading } = useAuthStore();
   const { chats, fetchChatsSummary } = useChatStore();
   const { fetchFriends, fetchOnlineFriends, fetchAllUsers } = useFriendsStore();
 
   const [loading, setLoading] = useState(true);
   const [loadingStage, setLoadingStage] = useState<'redirecting' | 'authenticating'>('redirecting');
 
+  // Check if returning from Google login
+  const isReturningFromGoogle = typeof window !== 'undefined' && 
+    sessionStorage.getItem('googleLoginInProgress') === 'true';
+
   // Fetch user session on mount
   useEffect(() => {
-    getSession();
+    const initSession = async () => {
+      // Clear Google login flag if present
+      if (isReturningFromGoogle) {
+        sessionStorage.removeItem('googleLoginInProgress');
+        // Add extra delay for mobile after Google redirect
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      await getSession();
+    };
+
+    initSession();
   }, [getSession]);
 
-  // Redirect if user is not authenticated
+  // Handle authentication state changes
   useEffect(() => {
-    if (sessionChecked && !isAuthenticated) {
-      router.push('/public');
+    if (sessionChecked) {
+      if (isAuthenticated) {
+        // Successfully authenticated
+        setLoadingStage('authenticating');
+        const timer = setTimeout(() => setLoading(false), 2000);
+        return () => clearTimeout(timer);
+      } else {
+        // Not authenticated, redirect to public
+        const timer = setTimeout(() => {
+          router.push('/public');
+        }, 500); // Small delay for mobile
+        
+        return () => clearTimeout(timer);
+      }
     }
   }, [sessionChecked, isAuthenticated, router]);
 
-  // Handle loading stages
+  // Fetch data after successful authentication
   useEffect(() => {
-    if (isAuthenticated) {
-      setLoadingStage('redirecting');
-
-      const timer1 = setTimeout(() => setLoadingStage('authenticating'), 2500);
-      const timer2 = setTimeout(() => setLoading(false), 5000);
-
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
+    if (sessionChecked && isAuthenticated && !loading) {
+      const fetchData = async () => {
+        try {
+          await Promise.all([
+            fetchAllUsers(),
+            fetchFriends(),
+            fetchChatsSummary(),
+            fetchOnlineFriends()
+          ]);
+        } catch (error) {
+          console.error("Failed to fetch dashboard data:", error);
+        }
       };
-    } else if (sessionChecked && !isAuthenticated) {
-      setLoading(false);
-    }
-  }, [isAuthenticated, sessionChecked]);
 
-  // Fetch chats and friends data after authentication
-  useEffect(() => {
-    if (sessionChecked && isAuthenticated) {
-      fetchAllUsers();
-      fetchFriends();
-      fetchChatsSummary();
-      fetchOnlineFriends();
+      fetchData();
     }
-  }, [fetchAllUsers, fetchFriends, fetchOnlineFriends, fetchChatsSummary, sessionChecked, isAuthenticated]);
+  }, [sessionChecked, isAuthenticated, loading, fetchAllUsers, fetchFriends, fetchOnlineFriends, fetchChatsSummary]);
 
   // Handlers
   const handleClick = () => setIsOpen(true);
@@ -127,14 +147,18 @@ const Dashboard = () => {
 
   const handleBack = () => setSelectedChat(null);
 
-  // Render loading spinner
-  if (loading) {
+  // Show loading while session is being checked or during auth process
+  if (loading || (!sessionChecked && isLoading)) {
+    const displayText = isReturningFromGoogle 
+      ? 'Completing Google sign-in...'
+      : loadingStage === 'redirecting' 
+        ? 'Redirecting...' 
+        : 'Authenticating...';
+
     return (
       <div className="h-screen bg-navbar-bg flex flex-col justify-center items-center gap-4">
         <MultiRingSpinner />
-        <p className="text-lg font-semibold text-primary">
-          {loadingStage === 'redirecting' ? 'Redirecting...' : 'Authenticating...'}
-        </p>
+        <p className="text-lg font-semibold text-primary">{displayText}</p>
         <div className="w-64 h-2 bg-gray-300 rounded-full overflow-hidden mt-2">
           <div
             className="h-full bg-gradient-to-r from-blue-400 to-purple-600 animate-progressBar"
@@ -145,7 +169,12 @@ const Dashboard = () => {
     );
   }
 
-  // Render main dashboard
+  // Don't render dashboard if not authenticated and session is checked
+  if (sessionChecked && !isAuthenticated) {
+    return null; // Router push will handle redirect
+  }
+
+  // Render main dashboard only when authenticated
   return (
     <div className="h-screen overflow-hidden">
       <DashboardMobileView
