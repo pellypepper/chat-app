@@ -198,8 +198,8 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, 
   }
 
   return (
-    <div className=" h-screen">
-      <div className="flex relative flex-col flex-1 h-screen">
+    <div className=" h-screen overflow-hidden">
+      <div className="flex relative flex-col flex-1 h-screen overflow-hidden">
            { chat  ?   
     ( <div className="flex flex-col flex-1 h-screen">
          <div className="p-5 sticky top-0 right-0 left-0 z-50 border-b border-gray-600  flex items-center justify-between">
@@ -366,7 +366,7 @@ const Rightdashboard: React.FC<RightdashboardProps> = ({ chat,handleUpdateOpen, 
         </div>
 
         {/* Input */}
-        <div className="sticky bottom-0 left-0 right-0 p-5 border-t border-[#30363d] z-50">
+        <div className="sticky bottom-0 left-0 right-0 p-5  border-t border-[#30363d] z-50">
           <form
             onSubmit={e => {
               e.preventDefault();

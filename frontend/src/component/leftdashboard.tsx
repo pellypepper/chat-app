@@ -56,7 +56,7 @@ const handleLogout = async () => {
   };
 
   return (
-    <section className="relative w-full  h-screen bg-primary-bg flex flex-col">
+    <section className="relative w-full overflow-hidden pb-4 h-screen bg-primary-bg flex flex-col">
   <div className="sticky top-0 left-0 right-0  bottom-0 bg-primary-bg border-b border-primary z-60 ">
     {/* User info + buttons */}
     <div className="flex justify-between p-5 items-center mb-4">
