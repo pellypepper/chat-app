@@ -1,10 +1,10 @@
-// stores/useAuthStore.ts - Improved version
+// stores/useAuthStore.ts - Updated for Authorization headers
 import { create } from "zustand";
 import axios from "axios";
 import { devtools } from "zustand/middleware";
 import { User } from "../types/user"; 
 
-axios.defaults.withCredentials = true;
+// Remove withCredentials since we're using headers instead
 axios.defaults.baseURL = "https://chat-app-frdxoa-production.up.railway.app";
 
 interface AuthState {
@@ -13,14 +13,25 @@ interface AuthState {
   isLoading: boolean;
   sessionChecked: boolean;
   error: string | null;
-  retryCount: number; // Add retry counter
+  accessToken: string | null;
+  refreshToken: string | null;
 
   login: (credentials: { email: string; password: string }) => Promise<void>;
   googleLogin: () => void;
   getSession: () => Promise<void>;
   logout: () => Promise<void>;
+  refreshAccessToken: () => Promise<boolean>;
   reset: () => void;
 }
+
+// Helper function to create axios instance with current token
+const createAuthenticatedRequest = (token: string | null) => {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return { headers };
+};
 
 export const useAuthStore = create<AuthState>()(
   devtools((set, get) => ({
@@ -29,32 +40,79 @@ export const useAuthStore = create<AuthState>()(
     isLoading: false,
     sessionChecked: false,
     error: null,
-    retryCount: 0,
+    accessToken: null,
+    refreshToken: null,
 
-    getSession: async () => {
-      const { retryCount } = get();
+    refreshAccessToken: async (): Promise<boolean> => {
+      const { refreshToken } = get();
       
-      // Prevent infinite retry loops
-      if (retryCount >= 3) {
-        set({
-          user: null,
-          isAuthenticated: false,
-          sessionChecked: true,
-          error: "Session check failed after multiple attempts",
-          isLoading: false
-        });
-        return;
+      if (!refreshToken) {
+        return false;
       }
 
+      try {
+        const response = await axios.post("/login/refresh", {}, {
+          headers: { Authorization: `Bearer ${refreshToken}` },
+          timeout: 10000
+        });
+        
+        const newAccessToken = response.data.accessToken;
+        set({ accessToken: newAccessToken, error: null });
+        
+        // Store in localStorage for persistence
+        localStorage.setItem('accessToken', newAccessToken);
+        
+        return true;
+      } catch (error) {
+        console.log("Refresh token failed:", error);
+        
+        // Clear invalid tokens
+        set({ 
+          accessToken: null, 
+          refreshToken: null,
+          user: null,
+          isAuthenticated: false 
+        });
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        
+        return false;
+      }
+    },
+
+    getSession: async () => {
       set({ isLoading: true, error: null });
       
       try {
-        // Add a small delay for mobile devices
-        await new Promise(resolve => setTimeout(resolve, 100));
+        let { accessToken } = get();
         
-        const res = await axios.get("/login/user", { 
-          withCredentials: true,
-          timeout: 10000 // 10 second timeout
+        // Try to get token from localStorage if not in state
+        if (!accessToken) {
+          accessToken = localStorage.getItem('accessToken');
+          if (accessToken) {
+            set({ accessToken });
+          }
+        }
+
+        if (!accessToken) {
+          // Try to refresh token
+          const refreshSuccessful = await get().refreshAccessToken();
+          if (!refreshSuccessful) {
+            set({
+              user: null,
+              isAuthenticated: false,
+              sessionChecked: true,
+              isLoading: false
+            });
+            return;
+          }
+          accessToken = get().accessToken;
+        }
+
+        // Get current user with access token
+        const res = await axios.get("/login/user", {
+          ...createAuthenticatedRequest(accessToken),
+          timeout: 10000
         });
         
         const user = res.data.user;
@@ -63,77 +121,75 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: user?.verified ?? false,
           isLoading: false,
           error: null,
-          sessionChecked: true,
-          retryCount: 0 // Reset on success
+          sessionChecked: true
         });
-      } catch (err: any) {
-        console.log("Initial session check failed, trying refresh...");
         
-        try {
-          await axios.post("/login/refresh", {}, { 
-            withCredentials: true,
-            timeout: 10000
-          });
-          
-          // Add small delay before retry
-          await new Promise(resolve => setTimeout(resolve, 200));
-          
-          const res = await axios.get("/login/user", { 
-            withCredentials: true,
-            timeout: 10000
-          });
-          
-          const user = res.data.user;
-          set({
-            user,
-            isAuthenticated: user?.verified ?? false,
-            isLoading: false,
-            error: null,
-            sessionChecked: true,
-            retryCount: 0
-          });
-        } catch (refreshError: any) {
-          console.log("Refresh failed:", refreshError);
-          
-          // Increment retry count and potentially retry
-          const newRetryCount = retryCount + 1;
-          set({
-            retryCount: newRetryCount
-          });
-          
-          if (newRetryCount < 3) {
-            // Retry after a delay on mobile
-            setTimeout(() => {
-              get().getSession();
-            }, 1000 * newRetryCount); // Progressive delay
-          } else {
-            set({
-              user: null,
-              isAuthenticated: false,
-              error: "Session expired",
-              sessionChecked: true,
-              isLoading: false
+      } catch (err: any) {
+        console.log("Session check failed, trying refresh...");
+        
+        // Try to refresh and retry once
+        const refreshSuccessful = await get().refreshAccessToken();
+        if (refreshSuccessful) {
+          try {
+            const { accessToken } = get();
+            const res = await axios.get("/login/user", {
+              ...createAuthenticatedRequest(accessToken),
+              timeout: 10000
             });
+            
+            const user = res.data.user;
+            set({
+              user,
+              isAuthenticated: user?.verified ?? false,
+              isLoading: false,
+              error: null,
+              sessionChecked: true
+            });
+            return;
+          } catch (retryError) {
+            console.log("Retry after refresh failed:", retryError);
           }
         }
+        
+        // Final fallback - clear everything
+        set({
+          user: null,
+          isAuthenticated: false,
+          error: "Session expired",
+          sessionChecked: true,
+          isLoading: false,
+          accessToken: null,
+          refreshToken: null
+        });
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       }
     },
 
     login: async ({ email, password }) => {
-      set({ isLoading: true, error: null, retryCount: 0 });
+      set({ isLoading: true, error: null });
       try {
         const response = await axios.post("/login", { email, password }, {
-          timeout: 15000 // Longer timeout for login
+          timeout: 15000,
+          withCredentials: true // Still use cookies for login response
         });
         
-        // Wait a bit for cookies to be set properly on mobile
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Extract tokens from response body instead of cookies
+        const { user, accessToken, refreshToken } = response.data;
         
+        // Store tokens
         set({ 
-          user: response.data.user, 
-          isAuthenticated: response.data.user?.verified ?? false,
-          sessionChecked: true 
+          user, 
+          isAuthenticated: user?.verified ?? false,
+          sessionChecked: true,
+          accessToken,
+          refreshToken
         });
+        
+        // Persist tokens to localStorage
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        
       } catch (err: any) {
         set({ error: err.response?.data?.message || err.message });
       } finally {
@@ -150,33 +206,55 @@ export const useAuthStore = create<AuthState>()(
     logout: async () => {
       set({ isLoading: true, error: null });
       try {
+        const { accessToken } = get();
+        
         await axios.post("/login/logout", {}, {
+          ...createAuthenticatedRequest(accessToken),
           timeout: 10000
         });
         
-        // Clear any stored flags
-        sessionStorage.removeItem('googleLoginInProgress');
-        
+        // Clear everything
         set({ 
           user: null, 
           isAuthenticated: false, 
           error: null, 
           sessionChecked: true,
-          retryCount: 0
+          accessToken: null,
+          refreshToken: null
         });
+        
+        // Clear localStorage
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        sessionStorage.removeItem('googleLoginInProgress');
+        
       } catch (err: any) {
-        set({ error: err.response?.data?.message || err.message });
+        // Even if logout fails on server, clear local state
+        set({ 
+          user: null, 
+          isAuthenticated: false, 
+          error: null,
+          accessToken: null,
+          refreshToken: null
+        });
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       } finally {
         set({ isLoading: false });
       }
     },
 
-    reset: () => set({ 
-      user: null, 
-      isLoading: false, 
-      error: null, 
-      sessionChecked: false,
-      retryCount: 0
-    }),
+    reset: () => {
+      set({ 
+        user: null, 
+        isLoading: false, 
+        error: null, 
+        sessionChecked: false,
+        accessToken: null,
+        refreshToken: null
+      });
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+    },
   }))
 );
