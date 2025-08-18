@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useChatStore } from '@/store/messageStore';
 import { useAuthStore } from '@/store/loginStore';
 import { useFriendsStore } from '@/store/friendStore';
@@ -11,7 +11,8 @@ import DashboardMobileView from '@/component/dashboardMobileView';
 import DashboardDesktopView from '@/component/dashboardDesktopView';
 import ModalsContainer from '@/component/ModalContainer';
 
-const Dashboard = () => {
+// Separate component that uses useSearchParams
+const DashboardContent = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -279,6 +280,23 @@ const Dashboard = () => {
         showFriendProfile={showFriendProfile}
       />
     </div>
+  );
+};
+
+// Loading fallback component
+const DashboardLoading = () => (
+  <div className="h-screen bg-navbar-bg flex flex-col justify-center items-center gap-4">
+    <MultiRingSpinner />
+    <p className="text-lg font-semibold text-primary">Loading...</p>
+  </div>
+);
+
+// Main Dashboard component with Suspense boundary
+const Dashboard = () => {
+  return (
+    <Suspense fallback={<DashboardLoading />}>
+      <DashboardContent />
+    </Suspense>
   );
 };
 
