@@ -1,13 +1,11 @@
-// stores/useAuthStore.ts
 import { create } from "zustand";
 import axios from "axios";
 import { devtools } from "zustand/middleware";
 import { User } from "../types/user";
 
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL ="https://chat-app-frdxoa-production.up.railway.app";
-
-
+axios.defaults.baseURL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-backend-railway.app'
+  : "http://localhost:8080";
 
 interface AuthState {
   user: User | null;
@@ -53,8 +51,7 @@ export const useAuthStore = create<AuthState>()(
     verifyEmail: async (email, code) => {
       set({ isLoading: true, error: null });
       try {
-          const userRes = await axios.post("/register/verify", { email, code });
-
+        const userRes = await axios.post("/register/verify", { email, code });
         set({
           user: userRes.data.user,
           verificationSent: false,

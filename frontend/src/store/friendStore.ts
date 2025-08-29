@@ -1,22 +1,19 @@
-
 import { create } from 'zustand';
 import axios from 'axios';
 import {User} from '../types/user';
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL ="https://chat-app-frdxoa-production.up.railway.app";
 
+axios.defaults.baseURL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-backend-railway.app'
+  : "http://localhost:8080";
 
 interface FriendsState {
   allUsers: User[];
   friends: User[];
   onlineFriends: number[];
   searchResults: User[];
-
-  selectedFriend: User | null; 
-
+  selectedFriend: User | null;
   loading: boolean;
   error: string | null;
-
   fetchFriends: () => Promise<void>;
   fetchOnlineFriends: () => Promise<void>;
   fetchAllUsers: () => Promise<void>;
@@ -26,11 +23,9 @@ interface FriendsState {
   addFriend: (friendId: number) => Promise<void>;
   removeFriend: (friendId: number) => Promise<void>;
   clearSearch: () => void;
-
   fetchFriendDetails: (friendId: number) => Promise<User | undefined>; 
   clearSelectedFriend: () => void;
 }
-
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
   allUsers: [],
@@ -44,7 +39,10 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   fetchAllUsers: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await axios.get('/friend/all');
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.get('/friend/all', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       set({ allUsers: res.data.users, loading: false });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -55,7 +53,10 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   fetchFriends: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await axios.get('/friend/list');
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.get('/friend/list', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       set({ friends: res.data.friends, loading: false });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -66,33 +67,34 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   fetchOnlineFriends: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await axios.get('/friend/online');
-      // Online friends are just IDs
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.get('/friend/online', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       set({ onlineFriends: res.data.online, loading: false });
-  
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       set({ error: message, loading: false });
     }
   },
 
-  
-fetchFriendDetails: async (friendId: number) => {
-  set({ loading: true, error: null });
-  try {
-    const res = await axios.get(`/friend/details/${friendId}`);
- const friend = res.data.friend as User;
-    set({ selectedFriend: friend, loading: false });
-        return friend;
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    set({ error: message, loading: false });
-  }
-},
+  fetchFriendDetails: async (friendId: number) => {
+    set({ loading: true, error: null });
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.get(`/friend/details/${friendId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const friend = res.data.friend as User;
+      set({ selectedFriend: friend, loading: false });
+      return friend;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      set({ error: message, loading: false });
+    }
+  },
 
-clearSelectedFriend: () => set({ selectedFriend: null }),
-
-
+  clearSelectedFriend: () => set({ selectedFriend: null }),
 
   searchFriends: async (query: string) => {
     if (!query.trim()) {
@@ -101,32 +103,36 @@ clearSelectedFriend: () => set({ selectedFriend: null }),
     }
     set({ loading: true, error: null });
     try {
-      const res = await axios.get(`/friend/search?query=${encodeURIComponent(query)}`);
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.get(`/friend/search?query=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       set({ searchResults: res.data.results, loading: false });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       set({ error: message, loading: false });
     }
   },
-    getUserSeen: async (userId: number) => {
 
+  getUserSeen: async (userId: number) => {
     try {
-       const { onlineFriends } = get();
-const isOnline = onlineFriends.includes(userId)
-if (isOnline) {
-          return { status: 'online', lastSeen: null };
-        }
-      const res = await axios.get(`/friend/status/${userId}`);
-      
-    return {
-      lastSeen: res.data.lastSeen,
-      status: res.data.status,
-    };
-  } catch {
-    return { lastSeen: null, status: 'offline' };
-  }
-},
-
+      const { onlineFriends } = get();
+      const accessToken = localStorage.getItem("accessToken");
+      const isOnline = onlineFriends.includes(userId);
+      if (isOnline) {
+        return { status: 'online', lastSeen: null };
+      }
+      const res = await axios.get(`/friend/status/${userId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      return {
+        lastSeen: res.data.lastSeen,
+        status: res.data.status,
+      };
+    } catch {
+      return { lastSeen: null, status: 'offline' };
+    }
+  },
 
   getUserStatus: async (userId: number) => {
     const { onlineFriends } = get();
@@ -136,8 +142,12 @@ if (isOnline) {
   addFriend: async (friendId: number) => {
     set({ loading: true, error: null });
     try {
+      const accessToken = localStorage.getItem("accessToken");
       await axios.post('/friend/add', { friendId }, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
       });
       await get().fetchFriends();
       await get().fetchOnlineFriends();
@@ -160,7 +170,10 @@ if (isOnline) {
   removeFriend: async (friendId: number) => {
     set({ loading: true, error: null });
     try {
-      await axios.post('/friend/remove', { friendId });
+      const accessToken = localStorage.getItem("accessToken");
+      await axios.post('/friend/remove', { friendId }, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       await get().fetchFriends();
       await get().fetchOnlineFriends();
       set({ loading: false });

@@ -3,18 +3,15 @@ import axios from "axios";
 import { devtools } from "zustand/middleware";
 import {User} from "../types/user"; 
 
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL ="https://chat-app-frdxoa-production.up.railway.app";
-
-
-
+axios.defaults.baseURL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-backend-railway.app'
+  : "http://localhost:8080";
 
 interface ProfileState {
   user: User | null;
   isLoading: boolean;
   error: string | null;
   message: string | null;
-
 
   getProfile: () => Promise<void>;
   updateProfile: (data: Partial<Omit<User, "id" | "verified">>) => Promise<void>;
@@ -32,11 +29,13 @@ export const useProfileStore = create<ProfileState>()(
     error: null,
     message: null,
 
-
     getProfile: async () => {
       set({ isLoading: true, error: null, message: null });
       try {
-        const response = await axios.get("/profile");
+        const accessToken = localStorage.getItem("accessToken");
+        const response = await axios.get("/profile", {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
         set({ user: response.data.user, message: null,  isLoading: false });
       } catch (err: any) {
         set({ error: err.response?.data?.error || err.message });
@@ -48,8 +47,13 @@ export const useProfileStore = create<ProfileState>()(
     updateProfile: async (data) => {
       set({ isLoading: true, error: null, message: null });
       try {
-        const res = await axios.put("/profile", data);
-        const refreshed = await axios.get("/profile");
+        const accessToken = localStorage.getItem("accessToken");
+        const res = await axios.put("/profile", data, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const refreshed = await axios.get("/profile", {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
         set({  user: refreshed.data.user, message: res.data.message  });
       } catch (err: any) {
         set({ error: err.response?.data?.error || err.message });
@@ -59,24 +63,25 @@ export const useProfileStore = create<ProfileState>()(
     },
 
     changePassword: async (currentPassword, newPassword) => {
-  set({ isLoading: true, error: null, message: null });
-  try {
-    const res = await axios.put("/profile/change-password", {
-      currentPassword,
-      newPassword,
-    });
-    set({ message: res.data.message });
-    return res.data;
-  } catch (err: any) {
- 
-    const backendError = err.response?.data?.error || err.response?.data?.message || err.message;
-   
-    set({ error: backendError });
-    throw new Error(backendError); 
-  } finally {
-    set({ isLoading: false });
-  }
-   } ,
+      set({ isLoading: true, error: null, message: null });
+      try {
+        const accessToken = localStorage.getItem("accessToken");
+        const res = await axios.put("/profile/change-password", {
+          currentPassword,
+          newPassword,
+        }, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        set({ message: res.data.message });
+        return res.data;
+      } catch (err: any) {
+        const backendError = err.response?.data?.error || err.response?.data?.message || err.message;
+        set({ error: backendError });
+        throw new Error(backendError); 
+      } finally {
+        set({ isLoading: false });
+      }
+    },
 
     forgotPassword: async (email) => {
       set({ isLoading: true, error: null, message: null });
@@ -112,13 +117,14 @@ export const useProfileStore = create<ProfileState>()(
       formData.append("image", file);
 
       try {
+        const accessToken = localStorage.getItem("accessToken");
         const res = await axios.post("/profile/upload-profile-picture", formData, {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${accessToken}`
           },
         });
         set({ message: res.data.message });
-    
         await useProfileStore.getState().getProfile();
       } catch (err: any) {
         set({ error: err.response?.data?.error || err.message });
@@ -130,5 +136,3 @@ export const useProfileStore = create<ProfileState>()(
     clearState: () => set({ isLoading: false, error: null, message: null }),
   }))
 );
-
-

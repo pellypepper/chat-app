@@ -1,42 +1,38 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || 'youraccesstokensecret';
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'yourrefreshtokensecret';
 
-//  verify Access Token
+//  verify Access Token from Authorization header
 export function authenticateAccessToken(req: Request, res: Response, next: NextFunction) {
-  const token = req.cookies.accessToken || (req.headers['authorization']?.split(' ')[1]);
-
+  // Get token from Authorization header
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
- res.status(401).json({ message: 'Access token missing' });
-    return ;
+    return res.status(401).json({ message: 'Access token missing' });
   }
 
-  jwt.verify(token, ACCESS_TOKEN_SECRET, (err:any, user:any) => {
-    if (err) 
-     res.status(403).json({ message: 'Invalid or expired access token' });
+  jwt.verify(token, ACCESS_TOKEN_SECRET, (err: any, user: any) => {
+    if (err) return res.status(403).json({ message: 'Invalid or expired access token' });
     req.user = user;
     next();
-    return;
   });
 }
 
-//  verify Refresh Token
+//  verify Refresh Token from header or body
 export function authenticateRefreshToken(req: Request, res: Response, next: NextFunction) {
-  // Read refresh token from cookies!
-  const refreshToken = req.cookies.refreshToken;
+  // Try to get refresh token from header or body
+  const refreshToken =
+    (req.headers['x-refresh-token'] as string) ||
+    req.body.refreshToken;
+
   if (!refreshToken) {
-    res.status(401).json({ message: 'Refresh token missing' });
-    return;
+    return res.status(401).json({ message: 'Refresh token missing' });
   }
-  jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, (err:any, user:any) => {
-    if (err) {
-      res.status(403).json({ message: 'Invalid or expired refresh token' });
-      return;
-    }
+  jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, (err: any, user: any) => {
+    if (err) return res.status(403).json({ message: 'Invalid or expired refresh token' });
     req.user = user;
     next();
   });

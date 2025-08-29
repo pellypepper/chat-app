@@ -1,10 +1,9 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL ="https://chat-app-frdxoa-production.up.railway.app";
-
+axios.defaults.baseURL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-backend-railway.app'
+  : "http://localhost:8080";
 
 interface Story {
   id: number;
@@ -31,8 +30,8 @@ interface Viewer {
 }
 
 interface StoryStore {
-  stories: UserStoryGroup[]; // Friend stories
-  myStoryGroup: UserStoryGroup | null; // Own story group
+  stories: UserStoryGroup[];
+  myStoryGroup: UserStoryGroup | null;
   viewers: Viewer[];
   loading: boolean;
   error: string | null;
@@ -63,8 +62,10 @@ export const useStoryStore = create<StoryStore>((set) => ({
   fetchFriendStories: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await axios.get('/story/friends');
-
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.get('/story/friends', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       set({ stories: res.data.groupedStories, loading: false });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to fetch stories';
@@ -75,10 +76,11 @@ export const useStoryStore = create<StoryStore>((set) => ({
   fetchMyStories: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await axios.get('/story/');
-      console.log('My stories response:', res.data);
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.get('/story/', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       set({ myStoryGroup: res.data.userStories, loading: false });
-      
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to fetch your stories';
       set({ error: message, loading: false });
@@ -88,7 +90,13 @@ export const useStoryStore = create<StoryStore>((set) => ({
   uploadStory: async (data: FormData) => {
     set({ loading: true, error: null });
     try {
-      await axios.post('/story/upload', data);
+      const accessToken = localStorage.getItem("accessToken");
+      await axios.post('/story/upload', data, {
+        headers: { 
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "multipart/form-data"
+        }
+      });
       await Promise.all([
         useStoryStore.getState().fetchFriendStories(),
         useStoryStore.getState().fetchMyStories(),
@@ -101,36 +109,43 @@ export const useStoryStore = create<StoryStore>((set) => ({
 
   markViewed: async (storyId: number) => {
     try {
-      await axios.post(`/story/view/${storyId}`);
-
+      const accessToken = localStorage.getItem("accessToken");
+      await axios.post(`/story/view/${storyId}`, {}, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
     } catch (error) {
       console.error('Failed to mark as viewed', error);
     }
   },
+
   getStoryViewers: async (storyId: number) => {
-  set({ loading: true, error: null });
-  try {
-    const res = await axios.get(`/story/view/user/${storyId}`);
-    const viewers = Array.isArray(res.data.viewers) ? res.data.viewers : [];
-    set({ viewers, loading: false });
-    return viewers; // <--- This is important!
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch viewers';
-    set({ error: message, loading: false, viewers: [] });
-    return []; // <--- Always return an array
-  }
-},
-   deleteStory: async (storyId: number) => {
     set({ loading: true, error: null });
     try {
-      await axios.delete(`/story/${storyId}`);
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await axios.get(`/story/view/user/${storyId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const viewers = Array.isArray(res.data.viewers) ? res.data.viewers : [];
+      set({ viewers, loading: false });
+      return viewers;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to fetch viewers';
+      set({ error: message, loading: false, viewers: [] });
+      return [];
+    }
+  },
 
-      // Refresh own and friend stories after deletion
+  deleteStory: async (storyId: number) => {
+    set({ loading: true, error: null });
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      await axios.delete(`/story/${storyId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
       await Promise.all([
         useStoryStore.getState().fetchFriendStories(),
         useStoryStore.getState().fetchMyStories(),
       ]);
-
       set({ loading: false });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete story';

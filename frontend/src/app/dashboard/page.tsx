@@ -20,51 +20,50 @@ const Dashboard = () => {
   const [updateGroupChat, setUpdateGroupChat] = useState<Chat | null>(null);
   const router = useRouter();  
 
-  const { isAuthenticated, getSession, sessionChecked } = useAuthStore();
+  const { isAuthenticated, getSession, sessionChecked, isLoading, error } = useAuthStore();
   const { chats, fetchChatsSummary } = useChatStore();
   const { fetchFriends, fetchOnlineFriends, fetchAllUsers } = useFriendsStore();
 
-  const [loading, setLoading] = useState(true);
-  const [loadingStage, setLoadingStage] = useState<'redirecting' | 'authenticating'>('redirecting');
+  const [loadingStage, setLoadingStage] = useState<'checking' | 'authenticating' | 'loading-data'>('checking');
 
   // Fetch user session on mount
   useEffect(() => {
-    getSession();
-  }, [getSession]);
+    if (!sessionChecked) {
+      getSession();
+    }
+  }, [getSession, sessionChecked]);
 
-  // Redirect if user is not authenticated
+  // Handle authentication status changes
   useEffect(() => {
-    if (sessionChecked && !isAuthenticated) {
-      router.push('/public');
+    if (sessionChecked) {
+      if (!isAuthenticated) {
+        console.log('User not authenticated, redirecting to public page');
+        router.push('/public');
+      } else {
+        setLoadingStage('loading-data');
+      }
     }
   }, [sessionChecked, isAuthenticated, router]);
 
-  // Handle loading stages
+  // Fetch data when user is authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      setLoadingStage('redirecting');
-
-      const timer1 = setTimeout(() => setLoadingStage('authenticating'), 2500);
-      const timer2 = setTimeout(() => setLoading(false), 5000);
-
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
+    if (sessionChecked && isAuthenticated && !isLoading) {
+      const fetchData = async () => {
+        try {
+          await Promise.all([
+            fetchAllUsers(),
+            fetchFriends(),
+            fetchChatsSummary(),
+            fetchOnlineFriends()
+          ]);
+        } catch (error) {
+          console.error('Error fetching dashboard data:', error);
+        }
       };
-    } else if (sessionChecked && !isAuthenticated) {
-      setLoading(false);
-    }
-  }, [isAuthenticated, sessionChecked]);
 
-  // Fetch chats and friends data after authentication
-  useEffect(() => {
-    if (sessionChecked && isAuthenticated) {
-      fetchAllUsers();
-      fetchFriends();
-      fetchChatsSummary();
-      fetchOnlineFriends();
+      fetchData();
     }
-  }, [fetchAllUsers, fetchFriends, fetchOnlineFriends, fetchChatsSummary, sessionChecked, isAuthenticated]);
+  }, [fetchAllUsers, fetchFriends, fetchOnlineFriends, fetchChatsSummary, sessionChecked, isAuthenticated, isLoading]);
 
   // Handlers
   const handleClick = () => setIsOpen(true);
@@ -127,22 +126,35 @@ const Dashboard = () => {
 
   const handleBack = () => setSelectedChat(null);
 
-  // Render loading spinner
-  if (loading) {
+  // Show loading screen while checking authentication or loading data
+  if (!sessionChecked || isLoading || (sessionChecked && isAuthenticated && loadingStage !== 'loading-data')) {
+    let loadingText = 'Loading...';
+    if (loadingStage === 'checking') loadingText = 'Checking authentication...';
+    else if (loadingStage === 'authenticating') loadingText = 'Authenticating...';
+    else if (loadingStage === 'loading-data') loadingText = 'Loading dashboard...';
+
     return (
       <div className="h-screen bg-navbar-bg flex flex-col justify-center items-center gap-4">
         <MultiRingSpinner />
-        <p className="text-lg font-semibold text-primary">
-          {loadingStage === 'redirecting' ? 'Redirecting...' : 'Authenticating...'}
-        </p>
+        <p className="text-lg font-semibold text-primary">{loadingText}</p>
+        {error && (
+          <p className="text-red-500 text-sm mt-2">
+            {error}
+          </p>
+        )}
         <div className="w-64 h-2 bg-gray-300 rounded-full overflow-hidden mt-2">
           <div
-            className="h-full bg-gradient-to-r from-blue-400 to-purple-600 animate-progressBar"
-            style={{ animationDuration: '5s' }}
+            className="h-full bg-gradient-to-r from-blue-400 to-purple-600 animate-pulse"
           />
         </div>
       </div>
     );
+  }
+
+  // If session is checked and user is not authenticated, don't render dashboard
+  // (redirect should happen in useEffect above)
+  if (sessionChecked && !isAuthenticated) {
+    return null;
   }
 
   // Render main dashboard
