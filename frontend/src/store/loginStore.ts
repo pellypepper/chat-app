@@ -5,7 +5,7 @@ import { User } from "../types/user";
 
 // Set base URL based on environment
 axios.defaults.baseURL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-backend-railway.app'
+  ? 'https://chat-app-frdxoa-production.up.railway.app'
   : "http://localhost:8080";
 
 interface AuthState {

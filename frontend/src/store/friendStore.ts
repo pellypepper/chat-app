@@ -3,7 +3,7 @@ import axios from 'axios';
 import {User} from '../types/user';
 
 axios.defaults.baseURL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-backend-railway.app'
+  ? 'https://chat-app-frdxoa-production.up.railway.app'
   : "http://localhost:8080";
 
 interface FriendsState {

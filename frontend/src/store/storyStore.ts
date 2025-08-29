@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import axios from 'axios';
 
 axios.defaults.baseURL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-backend-railway.app'
+   ? 'https://chat-app-frdxoa-production.up.railway.app'
   : "http://localhost:8080";
 
 interface Story {
