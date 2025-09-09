@@ -46,7 +46,7 @@ const Register: React.FC<RegisterProps> = ({ }) => {
    const data = {
   firstname: firstName,
   lastname: lastName,
-  email,
+  email: email.toLowerCase(),
   password,
 };
 

@@ -37,7 +37,7 @@ const Signin: React.FC = () => {
     }
 
     setFormError(null);
-    await login({ email, password });
+    await login({ email: email.toLowerCase(), password });
 
     // Show popup immediately if backend error exists
     if (useAuthStore.getState().error) {
