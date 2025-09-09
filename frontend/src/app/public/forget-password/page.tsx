@@ -92,7 +92,7 @@ export default function ForgotPassword() {
 
             <div className="text-center mt-8 text-sm">
               Remember your password?{' '}
-              <a href="#" className="text-[#58a6ff] hover:underline" onClick={() => router.push('/withNavpages/signin')}>
+              <a href="#" className="text-[#58a6ff] hover:underline" onClick={() => router.push('/public/signin')}>
                 Sign In
               </a>
             </div>
